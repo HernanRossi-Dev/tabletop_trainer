@@ -84,7 +84,7 @@ class Interaction(db.Model):
 
 # --- API Endpoints ---
 
-@app.route('/users/<uuid:user_id>', methods=['GET']) # Use uuid converter for route param
+@app.route('/api/users/<uuid:user_id>', methods=['GET']) # Use uuid converter for route param
 def get_user(user_id):
     """
     1: Get User Endpoint
@@ -99,7 +99,7 @@ def get_user(user_id):
 
     return jsonify(user.to_dict()), 200
 
-@app.route('/users', methods=['POST'])
+@app.route('/api/users', methods=['POST'])
 def create_user():
     """
     2: Post User Endpoint
@@ -139,7 +139,7 @@ def create_user():
         return jsonify({"error": "An unexpected error occurred"}), 500
 
 
-@app.route('/interactions/initial', methods=['POST'])
+@app.route('/api/interactions/initial', methods=['POST'])
 def post_initial_interaction():
     """
     3: Post Initial Interaction Endpoint
@@ -191,7 +191,7 @@ def post_initial_interaction():
         return jsonify({"error": "An unexpected error occurred logging interaction"}), 500
 
 
-@app.route('/interactions/text', methods=['POST'])
+@app.route('/api/interactions/text', methods=['POST'])
 def post_text_interaction():
     """
     4: Post Text Interaction Endpoint
@@ -250,7 +250,7 @@ def post_text_interaction():
         return jsonify({"error": "An unexpected error occurred logging interaction"}), 500
 
 
-@app.route('/interactions/image', methods=['POST'])
+@app.route('/api/interactions/image', methods=['POST'])
 def post_image_interaction():
     """
     5: Post Image Interaction Endpoint

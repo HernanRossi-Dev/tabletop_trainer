@@ -1,0 +1,59 @@
+services:
+  # Backend Service (Flask/Gunicorn)
+  backend:
+    build:
+      context: ./backend # Path to backend Dockerfile and code
+      dockerfile: Dockerfile
+    container_name: wargainer_backend
+    volumes:
+      # Mount backend code for development live-reload (remove/adjust for prod)
+      - ./backend:/app
+    environment:
+      # Pass DATABASE_URL from .env file
+      - DATABASE_URL=${DATABASE_URL}
+      # Add other backend env vars if needed
+    depends_on:
+      db:
+        condition: service_healthy # Wait for DB
+    restart: unless-stopped
+    # No ports exposed externally, Nginx handles traffic
+
+  # Frontend Service (Nginx serving SolidJS build + Proxy)
+  frontend:
+    build:
+      context: ./frontend # Path to frontend Dockerfile and code
+      dockerfile: Dockerfile
+    container_name: wargainer_frontend_nginx
+    ports:
+      - "80:80" # Map host port 80 to Nginx container port 80
+    volumes:
+      # Mount custom Nginx config - Overwrites the one possibly copied in Dockerfile
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro # Read-only mount
+      # For development live-reload of frontend (requires manual rebuild or dev server setup)
+      # - ./frontend:/app # Less useful here as Nginx serves pre-built files
+    depends_on:
+      - backend # Nginx needs the backend to proxy API calls
+    restart: unless-stopped
+
+  # Database Service (PostgreSQL)
+  db:
+    image: postgres:15
+    container_name: wargainer_db_container
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    # No external port mapping needed unless you want direct access from host
+    # ports:
+    #   - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

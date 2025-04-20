@@ -1,0 +1,27 @@
+# Git files
+.git
+.gitignore
+
+# Poetry virtual environment (if created locally)
+.venv
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Test caches
+.pytest_cache/
+.mypy_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Environment file (should not be in image)
+.env
+
+# Logs
+*.log
