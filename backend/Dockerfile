@@ -23,6 +23,6 @@ COPY . /app/
 # No EXPOSE needed here if only accessed internally by Nginx
 # EXPOSE 5000
 
-# Command to run the backend server using Gunicorn
+# Command to run the backend app using Gunicorn
 # Adjust workers as needed. Bind to 0.0.0.0 and the internal port.
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]

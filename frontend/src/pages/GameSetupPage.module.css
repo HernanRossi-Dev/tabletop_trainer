@@ -1,0 +1,103 @@
+/* src/pages/GameSetupPage.module.css */
+.setupContainer {
+    padding: 20px;
+    max-width: 600px;
+    margin: 20px auto;
+    background-color: #f4f4f4;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-family: sans-serif;
+  }
+  
+  .fieldset {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .fieldset legend {
+    font-weight: bold;
+    padding: 0 10px;
+    color: #333;
+  }
+  
+  .inputGroup {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between label and input */
+  }
+  
+  .inputGroup label {
+    flex-basis: 80px; /* Align labels */
+    text-align: right;
+    font-size: 0.9em;
+    color: #555;
+  }
+  
+  .numberInput,
+  .selectInput {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    flex-grow: 1; /* Allow input to fill space */
+  }
+  
+  .numberInput {
+     width: 80px; /* Specific width for number inputs */
+     flex-grow: 0; /* Don't let number inputs grow too much */
+  }
+  
+  
+  .armyControl {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    background-color: #5c6ac4;
+    color: white;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease;
+  }
+  
+  .button:hover:not(:disabled) {
+    background-color: #46529f;
+  }
+  
+  .button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .startButton {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.1em;
+    background-color: #28a745; /* Green for start */
+  }
+  
+  .startButton:hover {
+     background-color: #218838;
+  }
+  
+  .armyConfig {
+    border: 1px dashed #aaa;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 4px;
+    background-color: #fff;
+  }
+  
+  .armyConfig legend {
+    font-size: 0.9em;
+    font-style: italic;
+    color: #444;
+  }

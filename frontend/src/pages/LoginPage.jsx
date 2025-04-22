@@ -1,6 +1,7 @@
 import { createSignal, Show } from 'solid-js';
+import { API_HOSTNAME } from '../config'; // Adjust the path as needed
 // Optional: If using routing
-// import { useNavigate } from 'solid-app-router';
+// import { useNavigate } from '@solidjs/router';
 
 // Placeholder for your actual API call function
 async function loginUser(credentials) {
@@ -9,7 +10,7 @@ async function loginUser(credentials) {
   return new Promise(async (resolve, reject) => {
     try {
       // Example using fetch:
-      const response = await fetch('/api/login', { // Replace with your backend endpoint
+      const response = await fetch(`${API_HOSTNAME}/api/login`, { // Use imported hostname
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,7 +38,7 @@ async function loginUser(credentials) {
     } catch (error) {
        console.error('Login API call error:', error);
        // Pass a user-friendly error message
-       reject(error.message || 'An error occurred during login.');
+       reject((error instanceof Error ? error.message : 'An error occurred during login.'));
     }
   });
   // --- End of API call placeholder ---
@@ -48,7 +49,7 @@ function LoginPage() {
   const [username, setUsername] = createSignal('');
   const [password, setPassword] = createSignal('');
   const [loading, setLoading] = createSignal(false);
-  const [error, setError] = createSignal(null);
+  const [error, setError] = createSignal<string | null>(null);
 
   // Optional: For redirecting after login
   // const navigate = useNavigate();
@@ -81,7 +82,7 @@ function LoginPage() {
 
     } catch (err) {
       console.error("Login attempt failed:", err);
-      setError(err || 'Login failed. Please check your credentials.'); // Set error message from API or generic
+      setError(typeof err === 'string' ? err : 'Login failed. Please check your credentials.'); // Set error message from API or generic
 
     } finally {
       setLoading(false); // Ensure loading is set to false whether success or fail
@@ -89,11 +90,11 @@ function LoginPage() {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
+    <div style={{ 'max-width': '400px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', 'border-radius': '8px' }}>
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label for="username" style={{ display: 'block', marginBottom: '5px' }}>Username or Email:</label>
+        <div style={{ 'margin-bottom': '15px' }}>
+          <label for="username" style={{ display: 'block', 'margin-bottom': '5px' }}>Username or Email:</label>
           <input
             type="text"
             id="username"
@@ -101,11 +102,11 @@ function LoginPage() {
             onInput={(e) => setUsername(e.currentTarget.value)}
             required
             disabled={loading()}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '8px', 'box-sizing': 'border-box' }}
           />
         </div>
-        <div style={{ marginBottom: '15px' }}>
-          <label for="password" style={{ display: 'block', marginBottom: '5px' }}>Password:</label>
+        <div style={{ 'margin-bottom': '15px' }}>
+          <label for="password" style={{ display: 'block', 'margin-bottom': '5px' }}>Password:</label>
           <input
             type="password"
             id="password"
@@ -113,13 +114,13 @@ function LoginPage() {
             onInput={(e) => setPassword(e.currentTarget.value)}
             required
             disabled={loading()}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '8px', 'box-sizing': 'border-box' }}
           />
         </div>
 
         {/* --- Error Message Display --- */}
         <Show when={error()}>
-          <div style={{ color: 'red', marginBottom: '15px', border: '1px solid red', padding: '10px', borderRadius: '4px' }}>
+          <div style={{ color: 'red', 'margin-bottom': '15px', border: '1px solid red', padding: '10px', 'border-radius': '4px' }}>
             {error()}
           </div>
         </Show>

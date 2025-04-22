@@ -14,7 +14,8 @@ load_dotenv()
 app = Flask(__name__)
 
 # --- Database Configuration ---
-db_url = os.getenv('DATABASE_URL')
+# db_url = os.getenv('DATABASE_URL')
+db_url = "postgresql://myuser:mysecretpassword@localhost:5432/wargainer_db"
 if not db_url:
     raise ValueError("No DATABASE_URL set for Flask application. Please set it in .env file.")
 
