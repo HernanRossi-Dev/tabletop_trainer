@@ -10,7 +10,7 @@ function HomePage() {
   return (
     <>
       <div>
-        <div style={{ cursor: 'pointer', display: 'inline-block' }} onClick={() => navigate('/about')}>
+        <div style={{ cursor: 'pointer', display: 'inline-block' }}>
           <img src={sectorCommandLogo} class="logo" />
         </div>
       </div>

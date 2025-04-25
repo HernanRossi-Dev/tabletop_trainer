@@ -1,0 +1,54 @@
+.dashboardContainer {
+    padding: 20px;
+    max-width: 900px;
+    margin: 20px auto;
+    font-family: sans-serif;
+  }
+  
+  .dashboardContainer h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+  }
+  
+  .noBattle {
+    text-align: center;
+    padding: 40px;
+    background-color: #f9f9f9;
+    border: 1px dashed #ccc;
+    border-radius: 8px;
+  }
+  
+  .noBattle p {
+      margin-bottom: 20px;
+      font-size: 1.1em;
+      color: #666;
+  }
+  
+  /* Re-use button styles or define new ones */
+  .actionButton {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s ease;
+  }
+  
+  .actionButton:hover {
+    background-color: #0056b3;
+  }
+  
+  .clearButton {
+      background-color: #dc3545; /* Red for destructive actions */
+      margin-top: 15px;
+      display: block; /* Make it block to center easily if needed */
+      margin-left: auto; /* Example positioning */
+      margin-right: auto; /* Example positioning */
+      max-width: 200px; /* Limit width */
+  }
+  .clearButton:hover {
+      background-color: #c82333;
+  }

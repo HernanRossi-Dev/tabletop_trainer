@@ -82,13 +82,15 @@ function GameSetupPage() {
 
   return (
     <div class={styles.setupContainer}>
-      <h1>Sector Command AI - Game Setup</h1>
+      <h1 style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#2e3a59" }}>
+        Battle Command AI - Game Setup
+      </h1>
 
       {/* --- Play Area Section --- */}
       <fieldset class={styles.fieldset}>
-        <legend>Play Area (Inches)</legend>
+        <legend style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Play Area (Inches)</legend>
         <div class={styles.inputGroup}>
-          <label for="widthInput">Width:</label>
+          <label for="widthInput" style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Width:</label>
           <input
             id="widthInput"
             type="number"
@@ -99,7 +101,7 @@ function GameSetupPage() {
           />
         </div>
         <div class={styles.inputGroup}>
-          <label for="heightInput">Height:</label>
+          <label for="heightInput" style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Height:</label>
           <input
             id="heightInput"
             type="number"
@@ -113,7 +115,9 @@ function GameSetupPage() {
 
       {/* --- Armies Section --- */}
       <fieldset class={styles.fieldset}>
-        <legend>Armies ({numberOfArmies()})</legend>
+        <legend style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>
+          Armies ({numberOfArmies()})
+        </legend>
         <div class={styles.armyControl}>
           <button onClick={addArmy} disabled={!canAddArmy()} class={styles.button}>
             Add Army (+)
@@ -127,17 +131,21 @@ function GameSetupPage() {
         <For each={armies()}>
           {(army, index) => (
             <fieldset class={styles.armyConfig}>
-              <legend>Army {index() + 1} {index() === 0 ? "(Player)" : "(AI)"}</legend> {/* Convention: Army 1 is Player */}
+              <legend style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>
+                Army {index() + 1} {index() === 0 ? "(Player)" : "(AI)"}
+              </legend>
 
               {/* Faction Selection */}
               <div class={styles.inputGroup}>
-                <label for={`factionSelect-${army.id}`}>Faction:</label>
+                <label for={`factionSelect-${army.id}`} style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>
+                  Faction:
+                </label>
                 <select
                   id={`factionSelect-${army.id}`}
                   value={army.faction}
                   onChange={(e) => updateArmyConfig(army.id, 'faction', e.currentTarget.value)}
                   class={styles.selectInput}
-                  required // HTML5 validation hint
+                  required
                 >
                   <option value="" disabled>-- Select Faction --</option>
                   <For each={WARHAMMER_40K_FACTIONS}>
@@ -148,7 +156,9 @@ function GameSetupPage() {
 
               {/* Team Assignment */}
               <div class={styles.inputGroup}>
-                <label for={`teamInput-${army.id}`}>Team:</label>
+                <label for={`teamInput-${army.id}`} style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>
+                  Team:
+                </label>
                 <input
                   id={`teamInput-${army.id}`}
                   type="number"
@@ -164,7 +174,11 @@ function GameSetupPage() {
       </fieldset>
 
       {/* --- Start Game Button --- */}
-      <button onClick={handleStartGame} class={`${styles.button} ${styles.startButton}`}>
+      <button
+        onClick={handleStartGame}
+        class={`${styles.button} ${styles.startButton}`}
+        style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#fff", "backgroundColor": "#2e3a59" }}
+      >
         Start Game
       </button>
     </div>

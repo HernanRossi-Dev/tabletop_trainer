@@ -9,31 +9,50 @@ import {
 } from "@suid/material";
 
 export default function BasicAppBar() {
+  const handleHomeClick = () => {
+    window.location.href = "/";
+  };
+  const handleBattlesClick = () => {
+    window.location.href = "/battles";
+  };
+  const handleLoginClick = () => {
+    window.location.href = "/login";
+  };
+  const handleAboutClick = () => {
+    window.location.href = "/about";
+  };
+
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" sx={{ backgroundColor: "brown" }}>
-        <Toolbar>
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
+    <Box sx={{ flexGrow: 5 }}>
+      <AppBar position="static" sx={{ backgroundColor: "rgb(3, 150, 156);" }}>
+        <Toolbar sx={{ justifyContent: "flex-start" }}>
           <Typography
             variant="h6"
             component="div"
             sx={{
-              flexGrow: 1,
               fontWeight: 700,
-              fontFamily: '"Orbitron", sans-serif',
+              fontFamily: '"Share Tech Mono", "Orbitron", "Audiowide", "Roboto Mono", monospace',
+              mr: 2,
+              letterSpacing: 2,
+              textTransform: "uppercase",
             }}
           >
-            Sector Command AI
+            Battle Command AI
           </Typography>
-          {/* <Button color="inherit">Login</Button> */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              ml: 2,
+            }}
+          >
+            <Button color="inherit" onClick={handleHomeClick}>Home</Button>
+            <Button color="inherit" onClick={handleBattlesClick}>Battles</Button>
+            <Button color="inherit" onClick={handleAboutClick}>About</Button>
+          </Box>
+          <Box sx={{ flexGrow: 1 }} />
+          <Button color="inherit" onClick={handleLoginClick}>Login</Button>
         </Toolbar>
       </AppBar>
     </Box>

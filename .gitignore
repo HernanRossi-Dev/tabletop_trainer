@@ -26,4 +26,5 @@ Thumbs.db
 
 # General
 *.log
-.env # Root env file
+.env
+**/.env* # Ignore .env files in all directories

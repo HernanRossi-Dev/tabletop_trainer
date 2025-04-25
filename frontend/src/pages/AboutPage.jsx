@@ -8,12 +8,12 @@ function AboutPage() {
     return (
         <>
             <div>
-                <h1>About Sector Command AI</h1>
+                <h1>About Battle Command AI</h1>
                     <div style={{ cursor: 'pointer', display: 'inline-block' }} onClick={() => navigate('/')}>
                         <img src={sectorCommandLogo} class="logo"/>
                     </div>
                 <p>
-                    Sector Command AI is a web application that lets you practice your tabletop games using AI. 
+                    Battle Command AI is a web application that lets you practice your tabletop games using AI. 
                     Simply take a picture of your game, and the AI will analyze the board and play as your opponent, helping you improve your skills.
                 </p>
             </div>

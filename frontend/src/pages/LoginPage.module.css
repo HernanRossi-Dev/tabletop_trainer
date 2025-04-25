@@ -1,0 +1,67 @@
+/* src/pages/LoginPage.module.css */
+.loginContainer {
+    max-width: 400px;
+    margin: 40px auto;
+    padding: 30px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-family: sans-serif;
+  }
+  
+  .button {
+    display: block;
+    width: 100%;
+    padding: 12px 20px;
+    margin: 15px 0;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+  }
+  
+  .button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .googleButton {
+    background-color: #4285F4; /* Standard Google Blue */
+    color: white;
+  }
+  .googleButton:hover:not(:disabled) {
+    background-color: #357ae8;
+  }
+  
+  
+  .facebookButton {
+    background-color: #1877F2; /* Standard Facebook Blue */
+    color: white;
+  }
+  .facebookButton:hover:not(:disabled) {
+    background-color: #166fe5;
+  }
+  
+  
+  .error {
+    color: #d93025;
+    margin-top: 15px;
+    font-size: 0.9em;
+  }
+  
+  .note {
+    margin-top: 20px;
+    font-size: 0.8em;
+    color: #5f6368;
+  }
+  
+  .profilePic {
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    margin: 10px auto;
+    display: block;
+  }

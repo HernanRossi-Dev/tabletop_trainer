@@ -1,0 +1,90 @@
+.battleCard {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 500px; /* Adjust as needed */
+    transition: box-shadow 0.3s ease;
+  }
+  
+  .battleCard:hover {
+     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .battleCard h2 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    font-size: 1.4em;
+  }
+  
+  .details p {
+    margin: 8px 0;
+    font-size: 1em;
+    color: #555;
+  }
+  
+  .details p strong {
+    color: #333;
+    min-width: 90px; /* Align labels */
+    display: inline-block;
+  }
+  
+  .armiesSection {
+    margin-top: 15px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+  }
+  
+  .armiesSection h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    color: #444;
+  }
+  
+  .armiesSection ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .armyItem {
+    padding: 5px 0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95em;
+    color: #666;
+  }
+  
+  .armyItem strong {
+      color: #444;
+  }
+  
+  
+  .actions {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+      display: flex;
+      gap: 10px; /* Space between buttons */
+  }
+  
+  .actionButton {
+    padding: 8px 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f8f8f8;
+    color: #333;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+  
+  .actionButton:hover {
+     background-color: #eee;
+     border-color: #bbb;
+  }
