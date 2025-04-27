@@ -15,8 +15,9 @@ function GameSetupPage() {
   // --- State Signals ---
 
   // Play Area
-  const [playAreaWidth, setPlayAreaWidth] = createSignal(44); // Common Strike Force size
-  const [playAreaHeight, setPlayAreaHeight] = createSignal(30); // Common Strike Force size
+  const [playAreaWidth, setPlayAreaWidth] = createSignal(44);
+  const [playAreaHeight, setPlayAreaHeight] = createSignal(30);
+  const [battleName, setBattleName] = createSignal('Default Battle');
 
   // Armies
   const [armies, setArmies] = createSignal([createNewArmy(), createNewArmy()]); // Start with Player vs AI
@@ -54,7 +55,7 @@ function GameSetupPage() {
     );
   };
 
-  const handleStartGame = () => {
+  const handleCreateBattle = async () => {
     // Validation (basic example)
     if (armies().some(army => !army.faction)) {
        alert("Please select a faction for every army.");
@@ -70,12 +71,33 @@ function GameSetupPage() {
         width: playAreaWidth(),
         height: playAreaHeight(),
       },
-      armies: armies(), // Contains faction and team for each army
+      userId: 1, // Placeholder for user ID
+      playerArmy: armies()[0], // Contains faction and team for each army
+      opponentArmy: armies()[1], // Contains faction and team for each army
+      battleName: battleName(), // Contains faction and team for each army
     };
 
-    console.log("Starting Game with Settings:", gameSettings);
-    // TODO: Navigate to the game screen or send settings to the game engine/state manager
-    alert(`Starting game on ${playAreaWidth()}x${playAreaHeight()} board with ${numberOfArmies()} armies! Check console for details.`);
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/create_battle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(gameSettings),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log("Battle created:", data);
+      alert(`Battle created! ID: ${data.battle_id || 'unknown'}`);
+      // Optionally, navigate to the battle page here
+    } catch (error) {
+      console.error("Failed to create battle:", error);
+      alert("Failed to create battle. See console for details.");
+    }
   };
 
   // --- Render Logic ---
@@ -86,11 +108,28 @@ function GameSetupPage() {
         Battle Command AI - Game Setup
       </h1>
 
+            {/* --- Battle Info Section --- */}
+        <fieldset class={styles.fieldset}>
+        <legend style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Battle Details</legend>
+ 
+        <div class={styles.inputGroup}>
+        <label for="battleInput" style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Battle Name:</label>
+          <input
+            id="battleInput"
+            type="string"
+            value={battleName()}
+            onInput={(e) => setBattleName(e.currentTarget.value)}
+            class={styles.numberInput}
+          />   
+        </div>
+      </fieldset>
+
       {/* --- Play Area Section --- */}
       <fieldset class={styles.fieldset}>
         <legend style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Play Area (Inches)</legend>
         <div class={styles.inputGroup}>
-          <label for="widthInput" style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Width:</label>
+
+          <label for="widthInput" style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Width:</label>      
           <input
             id="widthInput"
             type="number"
@@ -99,8 +138,6 @@ function GameSetupPage() {
             onInput={(e) => setPlayAreaWidth(parseInt(e.currentTarget.value, 10) || 0)}
             class={styles.numberInput}
           />
-        </div>
-        <div class={styles.inputGroup}>
           <label for="heightInput" style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Height:</label>
           <input
             id="heightInput"
@@ -116,15 +153,16 @@ function GameSetupPage() {
       {/* --- Armies Section --- */}
       <fieldset class={styles.fieldset}>
         <legend style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>
-          Armies ({numberOfArmies()})
+          Armies
+          {/* Armies ({numberOfArmies()}) */}
         </legend>
         <div class={styles.armyControl}>
-          <button onClick={addArmy} disabled={!canAddArmy()} class={styles.button}>
+          {/* <button onClick={addArmy} disabled={!canAddArmy()} class={styles.button}>
             Add Army (+)
           </button>
           <button onClick={removeArmy} disabled={!canRemoveArmy()} class={styles.button}>
             Remove Army (-)
-          </button>
+          </button> */}
         </div>
 
         {/* Loop through armies using <For> */}
@@ -175,11 +213,11 @@ function GameSetupPage() {
 
       {/* --- Start Game Button --- */}
       <button
-        onClick={handleStartGame}
+        onClick={handleCreateBattle}
         class={`${styles.button} ${styles.startButton}`}
         style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#fff", "backgroundColor": "#2e3a59" }}
       >
-        Start Game
+        Create Battle
       </button>
     </div>
   );

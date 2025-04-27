@@ -38,7 +38,7 @@ services:
   # Database Service (PostgreSQL)
   db:
     image: postgres:15
-    container_name: wargainer_db_container
+    container_name: battle_command_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
