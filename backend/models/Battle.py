@@ -3,7 +3,7 @@ from datetime import datetime
 from ..app import db
 from sqlalchemy.dialects.postgresql import UUID
 
-class Battles(db.Model):
+class Battle(db.Model):
     __tablename__ = 'battles'
 
     # Columns
@@ -26,7 +26,7 @@ class Battles(db.Model):
     # Helper to convert model to dictionary
     def to_dict(self):
         return {
-            "battle_id": str(self.id),
+            "id": str(self.id),
             "battle_name": str(self.battle_name),
             "user_id": str(self.user_id),
             "width": self.width,
@@ -41,4 +41,4 @@ class Battles(db.Model):
             "timestamp": self.timestamp.isoformat(),
         }
     
-print(f"--- MODEL LOADED: {Battles.__name__} (Table: {Battles.__tablename__}) ---") # <--- ADD THIS
+print(f"--- MODEL LOADED: {Battle.__name__} (Table: {Battle.__tablename__}) ---") # <--- ADD THIS

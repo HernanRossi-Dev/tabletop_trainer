@@ -1,17 +1,15 @@
+from datetime import datetime
 import uuid
 from flask import request, jsonify
 from sqlalchemy.exc import IntegrityError # To catch DB errors like unique constraints
 
-from backend.models.Users import Users
-from backend.models.Interactions import Interactions
-from backend.models.Battles import Battles
+from backend.models.User import User
+from backend.models.Interaction import Interaction
+from backend.models.Battle import Battle
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from backend.app import app, db
-
 
 @app.route('/api/users/<uuid:user_id>', methods=['GET']) # Use uuid converter for route param
 def get_user(user_id):
@@ -22,7 +20,7 @@ def get_user(user_id):
     # Query using primary key lookup (efficient)
     # user = Users.query.get_or_404(user_id) # Provides built-in 404 if not found
     # Alternatively, for more custom error message:
-    user = db.session.get(Users, user_id) # Newer syntax for primary key lookup
+    user = db.session.get(User, user_id) # Newer syntax for primary key lookup
     if user is None:
         return jsonify({"error": "Users not found"}), 404
 
@@ -46,7 +44,7 @@ def create_user():
         return jsonify({"error": "Missing 'username' in request body"}), 400
 
     # Create Users object
-    new_user = Users(username=username, email=email) # id and created_at have defaults
+    new_user = User(username=username, email=email) # id and created_at have defaults
 
     try:
         # Add to session and commit to database
@@ -67,13 +65,16 @@ def create_user():
         print(f"Error creating user: {e}")
         return jsonify({"error": "An unexpected error occurred"}), 500
 
-@app.route('/api/create_battle', methods=['POST'])
+@app.route('/api/create_battle', methods=['POST', 'OPTIONS'])
 def create_battle():
+    if request.method == 'OPTIONS':
+        return '', 204
     """
     2: Post Create Battles Endpoint
     Creates a new Battles entity in the database.
     Expects JSON data like {'playArea': {'width': 44, 'height': 60}, 'playerArmy': 'Black Templars', 'opponentArmy': 'Tau'}
     """
+    print("--- CREATE BATTLE ---")
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400
 
@@ -90,10 +91,19 @@ def create_battle():
         return jsonify({"error": "Missing data in request body"}), 400
 
     # Create Users object
-    new_user = Battles(user_id=user_id,
-                      battle_id=uuid(),
-
-                      ) # id and created_at have defaults
+    new_user = Battle(user_id=user_id,
+                        id=uuid.uuid4(),
+                        battle_name=battle_name,
+                        width=width,
+                        height=height,
+                        player_army=player_army['faction'],
+                        opponent_army=opponent_army['faction'],
+                        battle_round="0",
+                        army_turn="0",
+                        player_points="0",
+                        opponent_points="0",
+                        timestamp=datetime.now()
+                      )
 
     try:
         # Add to session and commit to database
@@ -138,7 +148,7 @@ def post_initial_interaction():
         return jsonify({"error": "Invalid user_id format"}), 400
 
     # Verify user exists in DB
-    user = db.session.get(Users, user_id)
+    user = db.session.get(User, user_id)
     if user is None:
         return jsonify({"error": "Users not found"}), 404
 
@@ -147,7 +157,7 @@ def post_initial_interaction():
     # ----------------------------------
 
     # Create Interaction log entry
-    new_interaction = Interactions(
+    new_interaction = Interaction(
         user_id=user_id,
         type='initial',
         context=initial_context # Store context as JSONB
@@ -190,7 +200,7 @@ def post_text_interaction():
         return jsonify({"error": "Invalid user_id format"}), 400
 
     # Verify user exists
-    user = db.session.get(Users, user_id)
+    user = db.session.get(User, user_id)
     if user is None:
         return jsonify({"error": "Users not found"}), 404
 
@@ -204,7 +214,7 @@ def post_text_interaction():
     llm_response_text = f"LLM processed text from {user.username}: '{user_text}'."
 
     # Create Interaction log entry
-    new_interaction = Interactions(
+    new_interaction = Interaction(
         user_id=user_id,
         type='text',
         user_input=user_text,
@@ -251,7 +261,7 @@ def post_image_interaction():
         return jsonify({"error": "Invalid user_id format"}), 400
 
     # Verify user exists
-    user = db.session.get(Users, user_id)
+    user = db.session.get(User, user_id)
     if user is None:
         return jsonify({"error": "Users not found"}), 404
 
@@ -276,7 +286,7 @@ def post_image_interaction():
     llm_response_text = f"LLM processed image '{filename}' from {user.username}."
 
     # Create Interaction log entry
-    new_interaction = Interactions(
+    new_interaction = Interaction(
         user_id=user_id,
         type='image',
         user_input=filename, # Store filename as user input reference
@@ -299,3 +309,5 @@ def post_image_interaction():
         return jsonify({"error": "An unexpected error occurred logging interaction"}), 500
 
 
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000) # Set debug=False for production

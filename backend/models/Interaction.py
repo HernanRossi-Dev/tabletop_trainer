@@ -3,7 +3,7 @@ from datetime import datetime
 from ..app import db
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
-class Interactions(db.Model):
+class Interaction(db.Model):
     __tablename__ = 'interactions'
 
     # Columns
@@ -29,4 +29,4 @@ class Interactions(db.Model):
             "llm_output": self.llm_output,
             "context": self.context # JSONB is directly serializable
         }
-print(f"--- MODEL LOADED: {Interactions.__name__} (Table: {Interactions.__tablename__}) ---") # <--- ADD THIS
+print(f"--- MODEL LOADED: {Interaction.__name__} (Table: {Interaction.__tablename__}) ---") # <--- ADD THIS

@@ -4,8 +4,10 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 
 # db_url = str(os.getenv('DATABASE_URL'))
@@ -23,9 +25,9 @@ db = SQLAlchemy(app)
 @app.cli.command("init-db")
 def init_db_command():
     """Clear existing data and create new tables."""
-    from backend.models.Users import Users
-    from backend.models.Interactions import Interactions
-    from backend.models.Battles import Battles
+    from backend.models.User import User
+    from backend.models.Interaction import Interaction
+    from backend.models.Battle import Battle
 
     with app.app_context():
         # db.drop_all()
@@ -33,5 +35,3 @@ def init_db_command():
         db.create_all()
     print("Initialized the database.")
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000) # Set debug=False for production

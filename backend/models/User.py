@@ -3,7 +3,7 @@ from datetime import datetime
 from ..app import db
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
-class Users(db.Model):
+class User(db.Model):
     __tablename__ = 'users'
 
     # Columns
@@ -27,4 +27,4 @@ class Users(db.Model):
             "email": self.email,
             "created_at": self.created_at.isoformat() # Use ISO format for dates
         }
-print(f"--- MODEL LOADED: {Users.__name__} (Table: {Users.__tablename__}) ---") # <--- ADD THIS
+print(f"--- MODEL LOADED: {User.__name__} (Table: {User.__tablename__}) ---") # <--- ADD THIS

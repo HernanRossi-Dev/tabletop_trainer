@@ -71,7 +71,7 @@ function GameSetupPage() {
         width: playAreaWidth(),
         height: playAreaHeight(),
       },
-      userId: 1, // Placeholder for user ID
+      userId: "ede8d924-7aa7-42f6-99c9-6a291dce7815", // Placeholder for user ID
       playerArmy: armies()[0], // Contains faction and team for each army
       opponentArmy: armies()[1], // Contains faction and team for each army
       battleName: battleName(), // Contains faction and team for each army
@@ -79,6 +79,7 @@ function GameSetupPage() {
 
     try {
       const response = await fetch('http://127.0.0.1:5000/api/create_battle', {
+      // const response = await fetch('http://10.0.0.20:50000/api/create_battle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -93,7 +94,7 @@ function GameSetupPage() {
       const data = await response.json();
       console.log("Battle created:", data);
       alert(`Battle created! ID: ${data.battle_id || 'unknown'}`);
-      // Optionally, navigate to the battle page here
+
     } catch (error) {
       console.error("Failed to create battle:", error);
       alert("Failed to create battle. See console for details.");
