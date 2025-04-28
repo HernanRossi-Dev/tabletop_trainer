@@ -2,7 +2,7 @@ import { useNavigate } from '@solidjs/router'
 import sectorCommandLogo from '../assets/sc_logo.png'
 import '../App.css'
 
-function HomePage() {
+function LoggedInHome() {
   const navigate = useNavigate();
 
   return (
@@ -14,11 +14,11 @@ function HomePage() {
       </div>
       <div class="card">
         <button onClick={() => navigate('/battle')}>
-          Go to Battles
+          Thank you for logging in! Click here see your ongoing battles or to start a new battle.
         </button>
       </div>
     </>
   )
 }
 
-export default HomePage;
+export default LoggedInHome;

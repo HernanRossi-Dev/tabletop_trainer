@@ -1,84 +1,176 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
-from flask import request, jsonify
-from sqlalchemy.exc import IntegrityError # To catch DB errors like unique constraints
-
+from psycopg2 import IntegrityError
+import requests
+import jwt
+from flask import request, jsonify, make_response
+from google.oauth2 import id_token
+from google.auth.transport import requests as grequests
+from backend.helpers import get_jwt_identity, jwt_required
 from backend.models.User import User
 from backend.models.Interaction import Interaction
 from backend.models.Battle import Battle
 import sys
 import os
+from sqlalchemy import or_
+from backend.parameters import JWT_SECRET, JWT_ALGORITHM
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from backend.app import app, db
 
-@app.route('/api/users/<uuid:user_id>', methods=['GET']) # Use uuid converter for route param
-def get_user(user_id):
-    """
-    1: Get Users Endpoint
-    Retrieves information for a specific user from the database.
-    """
-    # Query using primary key lookup (efficient)
-    # user = Users.query.get_or_404(user_id) # Provides built-in 404 if not found
-    # Alternatively, for more custom error message:
-    user = db.session.get(User, user_id) # Newer syntax for primary key lookup
-    if user is None:
-        return jsonify({"error": "Users not found"}), 404
+@app.after_request
+def handle_options_and_cors(response):
+    # Set CORS headers for all responses
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Authorization,Content-Type"
+    if request.method == "OPTIONS":
+        response.status_code = 204
+        response.data = b""
+    return response
 
-    return jsonify(user.to_dict()), 200
 
-@app.route('/api/users', methods=['POST'])
-def create_user():
-    """
-    2: Post Users Endpoint
-    Creates a new user in the database.
-    Expects JSON data like {'username': 'some_user', 'email': 'user@example.com'}
-    """
-    if not request.is_json:
-        return jsonify({"error": "Request must be JSON"}), 400
-
-    data = request.get_json()
-    username = data.get('username')
-    email = data.get('email') # Optional
-
-    if not username:
-        return jsonify({"error": "Missing 'username' in request body"}), 400
-
-    # Create Users object
-    new_user = User(username=username, email=email) # id and created_at have defaults
-
-    try:
-        # Add to session and commit to database
-        db.session.add(new_user)
-        db.session.commit()
-        print(f"Users created: {new_user}") # Server log
-        return jsonify(new_user.to_dict()), 201 # 201 Created status code
-    except IntegrityError as e:
-        db.session.rollback() # Important: Rollback session on error
-        print(f"Database Integrity Error: {e}")
-        # Check if it's a unique constraint violation (e.g., username or email exists)
-        if "unique constraint" in str(e).lower():
-             return jsonify({"error": "Username or Email already exists"}), 409 # 409 Conflict
-        else:
-             return jsonify({"error": "Database error creating user"}), 500
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error creating user: {e}")
-        return jsonify({"error": "An unexpected error occurred"}), 500
-
-@app.route('/api/create_battle', methods=['POST', 'OPTIONS'])
-def create_battle():
+@app.route('/api/authorization', methods=['POST', 'OPTIONS'])
+def google_authorization():
     if request.method == 'OPTIONS':
         return '', 204
+    data = request.get_json()
+    code = data.get('code')
+    client_id = data.get('client_id')
+    redirect_uri = data.get('redirect_uri')
+    if not code or not client_id or not redirect_uri:
+        return jsonify({'error': 'Missing required parameters'}), 400
+    # Exchange code for tokens
+    token_url = "https://oauth2.googleapis.com/token"
+    token_data = {
+        'code': code,
+        'client_id': client_id,
+        'client_secret': os.environ.get('GOOGLE_CLIENT_SECRET'),
+        'redirect_uri': redirect_uri,
+        'grant_type': 'authorization_code'
+    }
+    token_resp = requests.post(token_url, data=token_data)
+    if not token_resp.ok:
+        app.logger.error(f"Token exchange failed: {token_resp.text}")
+        return jsonify({'error': 'Failed to exchange code', 'details': token_resp.text}), 400
+
+    tokens = token_resp.json()
+    id_token_jwt = tokens.get('id_token')
+    if not id_token_jwt:
+        app.logger.error("No id_token in response")
+        return jsonify({'error': 'No id_token in response'}), 400
+
+    # Verify and decode the id_token
+    try:
+        idinfo = id_token.verify_oauth2_token(id_token_jwt, grequests.Request(), client_id)
+        app.logger.info(f"ID Token verified: {idinfo}") # Debugging log
+
+        email = idinfo.get('email')
+        username = idinfo.get('name')
+        user = User.query.filter(
+            or_(
+                User.email == email if email else False,
+                User.username == username if username else False
+            )
+        ).first()
+        if user is None:
+            user = User(
+                id=uuid.uuid4(),
+                username=idinfo.get('name'),
+                email=email,
+                profile_picture=idinfo.get('picture'),
+                created_at=datetime.now()
+            )
+            db.session.add(user)
+            db.session.commit()
+        # else:
+        #     user.profile_picture = idinfo.get('picture')
+        #     db.session.commit()
+        payload = {
+            "user_id": str(user.id),
+            "email": user.email,
+            "exp": datetime.now().astimezone() + timedelta(hours=12)  # Token expires in 12 hours
+        }
+        access_token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+        return jsonify({
+            "access_token": access_token,
+            "user": user.to_dict()
+        }), 200
+    except ValueError as e:
+        return jsonify({'error': 'Invalid id_token', 'details': str(e)}), 401
+
+
+@app.route('/api/users/<uuid:email>', methods=['GET']) # Get user by email
+@jwt_required
+def get_user(email):
+    user = User.query.filter_by(email=email).first()
+    if user is None:
+        return jsonify({"error": "Users not found"}), 404
+    return jsonify(user.to_dict()), 200
+
+
+@app.route('/api/users', methods=['PUT'])
+@jwt_required
+def update_user():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    if not user_id:
+        return jsonify({"error": "Missing user_id"}), 400
+
+    user = db.session.get(User, user_id)
+    if user is None:
+        return jsonify({"error": "User not found"}), 404
+
+    # Update fields if present in the request
+    if 'name' in data:
+        user.username = data['name']
+    if 'email' in data:
+        user.email = data['email']
+    if 'profile_picture' in data:
+        user.profile_picture = data['profile_picture']
+    # Add more fields as needed
+
+    try:
+        db.session.commit()
+        return jsonify(user.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "Failed to update user", "details": str(e)}), 500
+
+
+@app.route('/api/battles', methods=['GET'])
+@jwt_required
+def fetch_battles(_context=None):
+    print(f"--- FETCH BATTLE ENDPOINT CALLED ---") # Debugging log
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({"error": "Missing user_id parameter"}), 400
+    try:
+        print(f'Fetching battles for user: {user_id}') # Debugging log
+        battles = Battle.query.all()
+        battles_list = [battle.to_dict() for battle in battles]
+        users_battle = [b for b in battles_list if b['user_id'] == user_id]
+        import json
+        print(json.dumps(users_battle)) 
+        return jsonify(users_battle), 200
+    except Exception as e:
+        print(f"Error fetching battles: {e}")
+        return jsonify({"error": "Failed to fetch battles"}), 500
+
+
+@app.route('/api/battles', methods=['POST'])
+@jwt_required
+def create_battle(_context=None):
     """
     2: Post Create Battles Endpoint
     Creates a new Battles entity in the database.
     Expects JSON data like {'playArea': {'width': 44, 'height': 60}, 'playerArmy': 'Black Templars', 'opponentArmy': 'Tau'}
     """
-    print("--- CREATE BATTLE ---")
+    print(f"--- CREATE BATTLE ENDPOINT CALLED ---") # Debugging log
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400
 
     data = request.get_json()
+    app.logger.info(f"Create battle endpoint called {data=}")
     playArea = data.get('playArea')
     width = playArea.get('width')
     height = playArea.get('height')
@@ -90,27 +182,24 @@ def create_battle():
     if not data:
         return jsonify({"error": "Missing data in request body"}), 400
 
-    # Create Users object
-    new_user = Battle(user_id=user_id,
+    new_battle = Battle(user_id=user_id,
                         id=uuid.uuid4(),
                         battle_name=battle_name,
                         width=width,
                         height=height,
-                        player_army=player_army['faction'],
-                        opponent_army=opponent_army['faction'],
+                        player_army=player_army,
+                        opponent_army=opponent_army,
                         battle_round="0",
                         army_turn="0",
                         player_points="0",
                         opponent_points="0",
                         timestamp=datetime.now()
                       )
-
     try:
-        # Add to session and commit to database
-        db.session.add(new_user)
+        db.session.add(new_battle)
         db.session.commit()
-        print(f"Users created: {new_user}") # Server log
-        return jsonify(new_user.to_dict()), 201 # 201 Created status code
+        print(f"Battle created: {new_battle}") # Server log
+        return jsonify(new_battle.to_dict()), 201 # 201 Created status code
     except IntegrityError as e:
         db.session.rollback() # Important: Rollback session on error
         print(f"Database Integrity Error: {e}")
@@ -126,6 +215,7 @@ def create_battle():
 
 
 @app.route('/api/interactions/initial', methods=['POST'])
+@jwt_required
 def post_initial_interaction():
     """
     3: Post Initial Interaction Endpoint
@@ -178,6 +268,7 @@ def post_initial_interaction():
 
 
 @app.route('/api/interactions/text', methods=['POST'])
+@jwt_required
 def post_text_interaction():
     """
     4: Post Text Interaction Endpoint
@@ -237,6 +328,7 @@ def post_text_interaction():
 
 
 @app.route('/api/interactions/image', methods=['POST'])
+@jwt_required
 def post_image_interaction():
     """
     5: Post Image Interaction Endpoint

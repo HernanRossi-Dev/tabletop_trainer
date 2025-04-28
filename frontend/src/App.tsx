@@ -4,8 +4,11 @@ import BasicAppBar from './pages/AppBarPage';
 import HomePage from './pages/HomePage';
 import BattlePage from './pages/BattlePage';
 import LoginPage from './pages/LoginPage';
-import BattleDashboardPage from './pages/BattleDashboardPage'; // Adjust path
-import GameSetupPage from './pages/GameSetupPage';     // Adjust path
+import BattleDashboardPage from './pages/BattleDashboardPage';
+import GameSetupPage from './pages/GameSetupPage';
+import LoggedInHome from './pages/LoggedInHome';
+import UserDetails from './pages/UserDetails';
+import ActiveBattle from './pages/ActiveBattle';
 // Make sure your CSS is imported, e.g.:
 import './index.css'; // Or './App.css' if you put global styles there
 
@@ -41,6 +44,9 @@ function App() {
           <Route path="/" component={HomePage} />
           <Route path="/battles" component={BattleDashboardPage} /> {/* Example: Dashboard is home */}
           <Route path="/setup" component={GameSetupPage} /> {/* Route for setup */}
+          <Route path="/login-success" component={LoggedInHome} /> {/* Route for setup */}
+          <Route path="/user-details" component={UserDetails} /> {/* Route for setup */}
+          <Route path="/active-battle" component={ActiveBattle} /> {/* Route for setup */}
         </Router>
       </div>
 

@@ -1,14 +1,34 @@
 import sectorCommandLogo from '../assets/sc_logo.png'
 import { useNavigate } from '@solidjs/router'
 import '../App.css'
-
+import { Typography } from "@suid/material";
+import { user } from "../store/user_store";
 
 function AboutPage() {
     const navigate = useNavigate();
+
+    console.log('In the about page');
+    console.log(user.id);
+    console.log(user.token);
+    console.log(user.email);
     return (
         <>
             <div>
-                <h1>About Battle Command AI</h1>
+                <Typography
+                    variant="h4"
+                    component="div"
+                    sx={{
+                    fontWeight: 700,
+                    fontFamily: '"Share Tech Mono", "Orbitron", "Audiowide", "Roboto Mono", monospace',
+                    mr: 2,
+                    letterSpacing: 2,
+                    textTransform: "uppercase",
+                    pt: 3, // Add padding-bottom (theme spacing unit)
+                    pb: 1, // Add padding-bottom (theme spacing unit)
+                    }}
+                >
+                    About Battle Command AI
+                </Typography>
                     <div style={{ cursor: 'pointer', display: 'inline-block' }} onClick={() => navigate('/')}>
                         <img src={sectorCommandLogo} class="logo"/>
                     </div>

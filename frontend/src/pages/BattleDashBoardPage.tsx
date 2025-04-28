@@ -1,87 +1,167 @@
-// src/pages/BattleDashboardPage.tsx
-import { createSignal, Show } from 'solid-js';
-import { useNavigate } from "@solidjs/router"; // Import for navigation
-import type { Battle } from '../types/battle';   // Adjust path
-import BattleCard from '../components/BattleCard'; // Adjust path
-import styles from './BattleDashboardPage.module.css'; // We'll create this
-
-// --- Mock Data / Initial State ---
-// In a real app, this would likely come from localStorage, an API call, or global state
-const [currentBattle, setCurrentBattle] = createSignal<Battle | null>(null);
-
-// Example: Function to simulate loading or setting a battle (replace with real logic)
-function loadInitialBattle() {
-    // Try loading from storage, etc.
-    // For demo purposes, let's leave it null initially
-    // Or uncomment below to start with a sample battle:
-    /*
-    setCurrentBattle({
-        id: 'BATTLE_001',
-        status: 'Ongoing',
-        currentRound: 2,
-        playArea: { width: 44, height: 30 },
-        armies: [
-            { id: 0, faction: 'Ultramarines', team: 1 },
-            { id: 1, faction: 'Necrons', team: 2 }
-        ]
-    });
-    */
-}
-// Call it once when the component mounts (or manage state globally)
-// onMount(loadInitialBattle); // Uncomment if you want to load on mount
+import {
+  Typography
+} from "@suid/material";
+import { createSignal, Show, onMount, createEffect } from 'solid-js';
+import { useNavigate } from "@solidjs/router";
+import type { Battle } from '../types/battle';
+import BattleCard from '../components/BattleCard';
+import Modal from '../components/Modal';
+import styles from './BattleDashboardPage.module.css';
+import { user } from '../store/user_store';
+import { useLocation } from "@solidjs/router";
+import { activeBattle, clearBattle, replaceBattle } from "../store/battle_store";
 
 
 function BattleDashboardPage() {
-  const navigate = useNavigate(); // Hook for navigation
+  const [showLoginModal, setShowLoginModal] = createSignal(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [showConfirmModal, setShowConfirmModal] = createSignal(false);
 
-  const handleStartNewBattle = () => {
-    // Option 1: Navigate to the setup page
-    console.log("Navigating to game setup...");
-    navigate('/setup'); // Assumes you have a '/setup' route pointing to GameSetupPage
-
-    // Option 2: (Placeholder) Directly set a mock battle for demo purposes
-    /*
-    console.log("Creating a placeholder new battle...");
-    setCurrentBattle({
-        id: `BATTLE_${Date.now()}`, // Simple unique ID
-        status: 'Setting Up',
-        currentRound: 0,
-        playArea: { width: 44, height: 30 }, // Default size
-        armies: [] // Armies would be added during setup
-    });
-    alert("Placeholder battle created. You'd normally go to the setup screen.");
-    */
+  const loadOngoingBattle = async () => {
+    if (!user.id) {
+      console.log("No user ID found. Cannot fetch battles.");
+      clearBattle();
+      return;
+    }
+    if (activeBattle) {
+      console.log("Current battle already set. Skipping fetch.");
+      return;
+    }
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/api/battles?user_id=${user.id}`, {
+        method: 'GET',
+        headers: {
+          "Authorization": `Bearer ${user.jwt}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log("Battles Fetched:", data);
+      if (data.length > 0) {
+        const activeBattle = data.find((battle: Battle) => !battle.archived);
+        if (activeBattle) {
+          replaceBattle(activeBattle);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch battles:", error);
+      alert("Failed to fetch battles. See console for details.");
+      clearBattle();
+    }
   };
 
-   const handleClearBattle = () => {
-       // In a real app, you might archive the battle or update its status
-       console.log("Clearing current battle...");
-       setCurrentBattle(null);
-   }
+  createEffect(() => {
+    location.pathname;
+    loadOngoingBattle();
+  });
+
+
+
+  const handleStartNewBattle = () => {
+    console.log("Button:", user);
+    if (!user.id) {
+      setShowLoginModal(true);
+    } else{
+      navigate('/setup');
+    }
+  };
+
+  const handleClearBattle = () => {
+    setShowConfirmModal(true);
+  };
+  const confirmClearBattle = () => {
+    clearBattle();
+    setShowConfirmModal(false);
+  };
 
   return (
     <div class={styles.dashboardContainer}>
-      <h1>Battle Dashboard</h1>
+      <Typography
+        variant="h4"
+        component="div"
+        sx={{
+          fontWeight: 700,
+          fontFamily: '"Share Tech Mono", "Orbitron", "Audiowide", "Roboto Mono", monospace',
+          mr: 2,
+          letterSpacing: 2,
+          textTransform: "uppercase",
+          pb: 2,
+        }}
+      >
+        Command Bunker
+      </Typography>
 
       <Show
-        when={currentBattle()}
+        when={!!activeBattle.id}
         fallback={
           <div class={styles.noBattle}>
-            <p>No active battle found.</p>
+            <p>No active battles found.</p>
+            <Show when={!user.id}>
+              <p style={{ color: "#aaa", 'font-style': "italic" }}>
+                Note: You must be logged in to view existing battle sessions
+              </p>
+            </Show>
             <button onClick={handleStartNewBattle} class={styles.actionButton}>
               Start New Battle
             </button>
           </div>
         }
       >
-        {/* Pass the non-null battle signal accessor to the card */}
-        {/* Using a function ensures the Card re-renders if the battle object changes */}
-        <BattleCard battle={currentBattle()!} />
+        {() =>
+          activeBattle ? (
+            <>
+              <BattleCard
+                battle={activeBattle!}
+                onComplete={() => setCurrentBattle(null)}
+              />
+              <button
+                onClick={handleClearBattle}
+                class={`${styles.actionButton} ${styles.clearButton}`}
+              >
+                Delete Current Battle
+              </button>
+            </>
+          ) : null
+        }
+      </Show>
 
-         {/* Add a button here to clear the current battle for testing */}
-         <button onClick={handleClearBattle} class={`${styles.actionButton} ${styles.clearButton}`}>
-             Clear Current Battle (Test)
-         </button>
+      <Show when={showLoginModal()}>
+        <Modal open={true} onClose={() => setShowLoginModal(false)}>
+          <h2>Please Login</h2>
+          <p>You must be logged in to start a new battle.</p>
+          <button
+            class={`${styles.actionButton} ${styles.loginButton}`}
+            onClick={() => { setShowLoginModal(false); navigate('/login'); }}
+          >
+            Proceed to Login
+          </button>
+        </Modal>
+      </Show>
+
+      {/* Delete Confirmation Modal */}
+      <Show when={showConfirmModal()}>
+        <Modal open={true} onClose={() => setShowConfirmModal(false)}>
+          <h2>Confirm Delete</h2>
+          <p>Are you sure you want to delete the current battle?</p>
+          <div style={{ display: "flex", gap: "1rem", 'justify-content': "flex-end" }}>
+            <button
+              class={styles.actionButton}
+              onClick={() => setShowConfirmModal(false)}
+            >
+              Cancel
+            </button>
+            <button
+              class={`${styles.actionButton}`}
+              onClick={confirmClearBattle}
+            >
+              Delete
+            </button>
+          </div>
+        </Modal>
       </Show>
     </div>
   );

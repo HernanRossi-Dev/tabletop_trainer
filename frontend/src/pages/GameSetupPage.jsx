@@ -1,23 +1,34 @@
-// src/pages/GameSetupPage.tsx
-import { createSignal, For, createEffect, batch } from 'solid-js';
-import { WARHAMMER_40K_FACTIONS } from '../config/factions'; // Adjust path if needed
-import styles from './GameSetupPage.module.css'; // Optional: For styling
+import { createSignal, For} from 'solid-js';
+import { WARHAMMER_40K_FACTIONS } from '../config/factions';
+import styles from './GameSetupPage.module.css';
+import { user } from '../store/user_store';
+import {
+  Typography,
+} from "@suid/material";
+import Modal from "@suid/material/Modal";
+import Box from "@suid/material/Box";
+import Button from "@suid/material/Button";
+import CheckCircleIcon from "@suid/icons-material/CheckCircle";
+import { useNavigate } from "@solidjs/router";
 
-// Simple ID generator
+
 let nextArmyId = 0;
 const createNewArmy = () => ({
   id: nextArmyId++,
-  faction: "", // Default to empty or a specific default faction
-  team: 1,     // Default to team 1
+  faction: "",
+  team: 1,
+  details: "", // New field for army details
 });
 
 function GameSetupPage() {
-  // --- State Signals ---
+  const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = createSignal(false);
+  const [editingArmyId, setEditingArmyId] = createSignal(null);
+  const [armyDetailsDraft, setArmyDetailsDraft] = createSignal("");
 
-  // Play Area
   const [playAreaWidth, setPlayAreaWidth] = createSignal(44);
   const [playAreaHeight, setPlayAreaHeight] = createSignal(30);
-  const [battleName, setBattleName] = createSignal('Default Battle');
+  const [battleName, setBattleName] = createSignal('');
 
   // Armies
   const [armies, setArmies] = createSignal([createNewArmy(), createNewArmy()]); // Start with Player vs AI
@@ -33,6 +44,15 @@ function GameSetupPage() {
 
   // --- Event Handlers ---
 
+  const openArmyDetailsModal = (army) => {
+    setEditingArmyId(army.id);
+    setArmyDetailsDraft(army.details || "");
+    setModalOpen(true);
+  };
+  const saveArmyDetails = () => {
+    updateArmyConfig(editingArmyId(), "details", armyDetailsDraft());
+    setModalOpen(false);
+  };
   const addArmy = () => {
     if (canAddArmy()) {
       setArmies([...armies(), createNewArmy()]);
@@ -41,12 +61,10 @@ function GameSetupPage() {
 
   const removeArmy = () => {
     if (canRemoveArmy()) {
-      // Remove the last army
       setArmies(armies().slice(0, -1));
     }
   };
 
-  // Update a specific field (faction or team) for a given army ID
   const updateArmyConfig = (id, field, value) => {
     setArmies(prevArmies =>
       prevArmies.map(army =>
@@ -56,7 +74,6 @@ function GameSetupPage() {
   };
 
   const handleCreateBattle = async () => {
-    // Validation (basic example)
     if (armies().some(army => !army.faction)) {
        alert("Please select a faction for every army.");
        return;
@@ -71,17 +88,21 @@ function GameSetupPage() {
         width: playAreaWidth(),
         height: playAreaHeight(),
       },
-      userId: "ede8d924-7aa7-42f6-99c9-6a291dce7815", // Placeholder for user ID
-      playerArmy: armies()[0], // Contains faction and team for each army
-      opponentArmy: armies()[1], // Contains faction and team for each army
-      battleName: battleName(), // Contains faction and team for each army
+      userId: user.id,
+      playerArmy: armies()[0],
+      opponentArmy: armies()[1],
+      battleName: battleName(),
+      battleName: battleName(),
+      army_turn: 'TBD',
+      player_points: 0,
+      opponent_points: 0,
     };
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/create_battle', {
-      // const response = await fetch('http://10.0.0.20:50000/api/create_battle', {
+      const response = await fetch('http://127.0.0.1:5000/api/battles', {
         method: 'POST',
         headers: {
+          "Authorization": `Bearer ${user.jwt}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(gameSettings),
@@ -90,39 +111,51 @@ function GameSetupPage() {
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
       }
-  
+
       const data = await response.json();
       console.log("Battle created:", data);
-      alert(`Battle created! ID: ${data.battle_id || 'unknown'}`);
-
+      navigate('/battles')
     } catch (error) {
       console.error("Failed to create battle:", error);
       alert("Failed to create battle. See console for details.");
     }
   };
 
-  // --- Render Logic ---
-
   return (
     <div class={styles.setupContainer}>
-      <h1 style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#2e3a59" }}>
-        Battle Command AI - Game Setup
-      </h1>
+      <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              fontWeight: 700,
+              fontFamily: '"Share Tech Mono", "Orbitron", "Audiowide", "Roboto Mono", monospace',
+              mr: 2,
+              letterSpacing: 2,
+              textTransform: "uppercase",
+              pb: 2,
+              color: 'black'
+            }}
+          >
+            Battle Command AI - Game Setup
+          </Typography>
 
-            {/* --- Battle Info Section --- */}
         <fieldset class={styles.fieldset}>
         <legend style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Battle Details</legend>
- 
-        <div class={styles.inputGroup}>
-        <label for="battleInput" style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Battle Name:</label>
+         <label
+          for="battleInput"
+          class={styles.nowrapLabel}
+          style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}
+        >
+          Battle Name:
+        </label>   
           <input
             id="battleInput"
             type="string"
             value={battleName()}
             onInput={(e) => setBattleName(e.currentTarget.value)}
-            class={styles.numberInput}
+            class={styles.textInput}
+            placeholder="Default Battle"
           />   
-        </div>
       </fieldset>
 
       {/* --- Play Area Section --- */}
@@ -166,7 +199,6 @@ function GameSetupPage() {
           </button> */}
         </div>
 
-        {/* Loop through armies using <For> */}
         <For each={armies()}>
           {(army, index) => (
             <fieldset class={styles.armyConfig}>
@@ -191,10 +223,25 @@ function GameSetupPage() {
                     {(factionName) => <option value={factionName}>{factionName}</option>}
                   </For>
                 </select>
+                <label for={`armyFile-${army.id}`} class={styles.uploadLabel}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => openArmyDetailsModal(army)}
+                  style={{ marginTop: "0.5rem", "display": "flex", "alignItems": "center", "gap": "0.5rem" }}
+                >
+                  {army.details
+                    ? <>
+                        <CheckCircleIcon sx={{ color: "#43a047", fontSize: "1.2em" }} />
+                        Edit Army Details
+                      </>
+                    : "Add Army Details"}
+                </Button>
+                </label>
               </div>
 
               {/* Team Assignment */}
-              <div class={styles.inputGroup}>
+              {/* <div class={styles.inputGroup}>
                 <label for={`teamInput-${army.id}`} style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>
                   Team:
                 </label>
@@ -206,7 +253,7 @@ function GameSetupPage() {
                   onInput={(e) => updateArmyConfig(army.id, 'team', parseInt(e.currentTarget.value, 10) || 1)}
                   class={styles.numberInput}
                  />
-              </div>
+              </div> */}
             </fieldset>
           )}
         </For>
@@ -215,12 +262,46 @@ function GameSetupPage() {
       {/* --- Start Game Button --- */}
       <button
         onClick={handleCreateBattle}
-        class={`${styles.button} ${styles.startButton}`}
+        class={styles.actionButton}
         style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#fff", "backgroundColor": "#2e3a59" }}
       >
         Create Battle
       </button>
+      <Modal open={modalOpen()} onClose={() => setModalOpen(false)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+            minWidth: 350,
+            maxWidth: "90vw",
+          }}
+        >
+          <h3>Edit Army Details</h3>
+          <textarea
+            value={armyDetailsDraft()}
+            onInput={e => setArmyDetailsDraft(e.currentTarget.value)}
+            rows={8}
+            style={{ width: "100%", fontFamily: "monospace", fontSize: "1rem", marginBottom: "1rem" }}
+            placeholder="Paste or write army details here, you can get this by exporting your army in the offical 40K app..."
+          />
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem" }}>
+            <Button variant="outlined" color="secondary" onClick={() => setModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="contained" color="primary" onClick={saveArmyDetails}>
+              Save
+            </Button>
+          </div>
+        </Box>
+      </Modal>
     </div>
+    
   );
 }
 

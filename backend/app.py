@@ -1,4 +1,5 @@
-from sqlalchemy.exc import IntegrityError # To catch DB errors like unique constraints
+import logging
+from sqlalchemy.exc import IntegrityError
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -9,11 +10,20 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Set up logging to file
+file_handler = logging.FileHandler('app.log')
+file_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+app.logger.addHandler(file_handler)
+# Set up logging to console
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(formatter)
+app.logger.addHandler(console_handler)
 
-# db_url = str(os.getenv('DATABASE_URL'))
-# print(f'DB URL: {db_url=}')
-db_url = "postgresql://bc_user:bc_password@localhost:5432/battle_command_db"
-print(f'DB URL: {db_url=}')
+db_url = os.getenv('DATABASE_URL')
 if not db_url:
     raise ValueError("No DATABASE_URL set for Flask application. Please set it in .env file.")
 
