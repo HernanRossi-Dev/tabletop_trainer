@@ -1,11 +1,15 @@
 import { createSignal, For } from "solid-js";
 import styles from "./ActiveBattle.module.css";
 import { activeBattle, clearBattle, replaceBattle } from "../store/battle_store";
+import { parseBattle } from '../types/battle_type';
+import { Typography } from "@suid/material";
 
 export default function ActiveBattle() {
     const [messages, setMessages] = createSignal([]);
     const [input, setInput] = createSignal("");
     const [recording, setRecording] = createSignal(false);
+    const parsed_battle = parseBattle(activeBattle);
+    const [round, setRound] = createSignal(Number(parsed_battle.battle_round) || 1);
     console.log(`ActiveBattle: ${JSON.stringify(activeBattle)}`);
     // Placeholder: handle sending a chat message
     const handleSend = () => {
@@ -47,19 +51,64 @@ export default function ActiveBattle() {
         <div class={styles.container}>
             {/* Left: Battle Details */}
             <div class={styles.leftPanel}>
-                <h2>Battle Details</h2>
+                <Typography variant="h4"
+                    component="div"
+                    sx={{
+                        fontWeight: 700,
+                        fontFamily: '"Share Tech Mono", "Orbitron", "Audiowide", "Roboto Mono", monospace',
+                        mr: 2,
+                        letterSpacing: 2,
+                        textTransform: "uppercase",
+                    }}
+                >
+                    Battle Details
+                </Typography>
                 {/* TODO: Render actual battle details here */}
                 <div class={styles.battleDetails}>
-                    <p>Battle Name: <b>Example Battle</b></p>
-                    <p>Players: <b>Player 1 vs Player 2</b></p>
-                    <p>Status: <b>Ongoing</b></p>
+                    <p>Battle Name: <b>{parsed_battle.battle_name}</b></p>
+                    <p>Your Army: <b>{parsed_battle.player_army.faction}</b></p>
+                    <p>Opponent Army: <b>{parsed_battle.opponent_army.faction}</b></p>
+
                     {/* Add more details as needed */}
+                </div>
+                <div class={styles.roundSliderRow}>
+                    <button
+                        class={styles.roundButton}
+                        onClick={() => setRound(r => Math.max(1, r - 1))}
+                        aria-label="Previous Round"
+                    >−</button>
+                    <input
+                        type="range"
+                        min={1}
+                        max={5}
+                        value={round()}
+                        onInput={e => setRound(Number(e.currentTarget.value))}
+                        class={styles.roundSlider}
+                        style={{ margin: "0 1rem", flex: 1 }}
+                    />
+                    <button
+                        class={styles.roundButton}
+                        onClick={() => setRound(r => Math.min(10, r + 1))}
+                        aria-label="Next Round"
+                    >+</button>
+                    <span class={styles.roundLabel}>Round: <b>{round()}</b></span>
                 </div>
             </div>
 
             {/* Right: Live Chat */}
             <div class={styles.rightPanel}>
-                <h2>Commander AI</h2>
+                <Typography variant="h4"
+                    component="div"
+                    sx={{
+                        fontWeight: 700,
+                        fontFamily: '"Share Tech Mono", "Orbitron", "Audiowide", "Roboto Mono", monospace',
+                        mr: 2,
+                        letterSpacing: 2,
+                        textTransform: "uppercase",
+                    }}
+                >
+                    Commander AI
+                </Typography>
                 <div class={styles.chatView}>
                     <For each={messages()}>
                         {msg => (
@@ -96,3 +145,4 @@ export default function ActiveBattle() {
         </div>
     );
 }
+

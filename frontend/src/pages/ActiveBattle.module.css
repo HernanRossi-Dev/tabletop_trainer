@@ -16,7 +16,7 @@
   display: flex;
   flex-direction: column;
   padding: 1rem;
-  height: 100vh; /* Ensure it fills the viewport */
+  height: 90vh; /* Ensure it fills the viewport */
   box-sizing: border-box;
 }
 
@@ -32,7 +32,6 @@
   padding: 1rem;
   margin-bottom: 1rem;
   /* Remove scrolling: */
-  overflow: hidden;
   min-height: 0;
   max-height: none;
 }
@@ -93,3 +92,35 @@
   border-radius: 4px;
   cursor: pointer;
 }
+
+/* CSS */
+.roundSliderRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+  
+  .roundButton {
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .roundSlider {
+    flex: 1;
+    accent-color: #1976d2;
+  }
+  
+  .roundLabel {
+    margin-left: 1rem;
+    font-weight: bold;
+  }
