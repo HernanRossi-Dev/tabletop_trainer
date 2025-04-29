@@ -2,13 +2,13 @@ import { Router, Route } from '@solidjs/router';
 import AboutPage from './pages/AboutPage';
 import BasicAppBar from './pages/AppBarPage';
 import HomePage from './pages/HomePage';
-import BattlePage from './pages/BattlePage';
 import LoginPage from './pages/LoginPage';
 import BattleDashboardPage from './pages/BattleDashboardPage';
 import GameSetupPage from './pages/GameSetupPage';
 import LoggedInHome from './pages/LoggedInHome';
 import UserDetails from './pages/UserDetails';
 import ActiveBattle from './pages/ActiveBattle';
+import BattlePlanner from './components/BattlePlanner';
 // Make sure your CSS is imported, e.g.:
 import './index.css'; // Or './App.css' if you put global styles there
 
@@ -47,6 +47,7 @@ function App() {
           <Route path="/login-success" component={LoggedInHome} /> {/* Route for setup */}
           <Route path="/user-details" component={UserDetails} /> {/* Route for setup */}
           <Route path="/active-battle" component={ActiveBattle} /> {/* Route for setup */}
+          <Route path="/battle-planner" component={BattlePlanner} /> {/* Route for setup */}
         </Router>
       </div>
 

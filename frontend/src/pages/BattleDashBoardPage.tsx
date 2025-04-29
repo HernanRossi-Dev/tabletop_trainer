@@ -1,7 +1,7 @@
 import {
   Typography
 } from "@suid/material";
-import { createSignal, Show, onMount, createEffect } from 'solid-js';
+import { createSignal, Show, createEffect } from 'solid-js';
 import { useNavigate } from "@solidjs/router";
 import type { Battle } from '../types/battle';
 import BattleCard from '../components/BattleCard';

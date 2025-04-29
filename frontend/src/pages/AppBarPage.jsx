@@ -15,7 +15,6 @@ import { createSignal } from "solid-js";
 
 export default function BasicAppBar() {
   const [anchorEl, setAnchorEl] = createSignal(null);
-
   const handleHomeClick = () => window.location.href = "/";
   const handleBattlesClick = () => window.location.href = "/battles";
   const handleLoginClick = () => window.location.href = "/login";
@@ -27,6 +26,10 @@ export default function BasicAppBar() {
   const handleUserDetails = () => {
     handleMenuClose();
     window.location.href = "/user-details";
+  };
+
+  const handleBattlePlannerClick = () => {
+    window.location.href = "/battle-planner";
   };
 
   const handleLogout = () => {
@@ -70,6 +73,7 @@ export default function BasicAppBar() {
             <Button color="inherit" onClick={handleHomeClick}>Home</Button>
             <Button color="inherit" onClick={handleBattlesClick}>Battles</Button>
             <Button color="inherit" onClick={handleAboutClick}>About</Button>
+            <Button color="inherit" onClick={handleBattlePlannerClick}>Battle Planner</Button>
           </Box>
           <Box sx={{ flexGrow: 1 }} />
           {user.id ? (

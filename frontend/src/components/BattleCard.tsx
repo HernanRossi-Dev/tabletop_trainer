@@ -33,7 +33,7 @@ function BattleCard(props: BattleCardProps) {
          <button
            class={styles.actionButton}
            onClick={() => {
-            navigate('/active-battles');
+            navigate('/active-battle');
            }}
          >
            Continue Battle
