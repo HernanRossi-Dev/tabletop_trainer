@@ -54,7 +54,7 @@ export default function BasicAppBar() {
             component="div"
             sx={{
               fontWeight: 700,
-              fontFamily: '"Share Tech Mono", "Orbitron", "Audiowide", "Roboto Mono", monospace',
+              fontFamily: '"Share Tech Mono", "Iceberg", "Audiowide", "Roboto Mono", monospace',
               mr: 2,
               letterSpacing: 2,
               textTransform: "uppercase",

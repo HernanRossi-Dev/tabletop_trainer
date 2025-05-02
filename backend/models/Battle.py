@@ -17,11 +17,12 @@ class Battle(db.Model):
     opponent_army = db.Column(db.JSON, nullable=True)
     battle_round = db.Column(db.Text, nullable=True) # Store what the current round is
     army_turn = db.Column(db.Text, nullable=True) 
-    player_points = db.Column(db.Text, nullable=True) # Store the points of the player
-    opponent_points = db.Column(db.Text, nullable=True) # Store the points of the opponent
+    player_score = db.Column(db.Text, nullable=True) # Store the points of the player
+    opponent_score = db.Column(db.Text, nullable=True) # Store the points of the opponent
     archived = db.Column(db.Boolean, default=False) # Archive the battle
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.now(), index=True)
-
+    battle_log = db.Column(db.JSON, nullable=False)
+    # Relationships
     def __repr__(self):
         return f'<Battle {self.battle_name} (User: {self.user_id}, ID: {self.id})>'
 
@@ -37,8 +38,9 @@ class Battle(db.Model):
             "opponent_army": json.dumps(self.opponent_army) if isinstance(self.opponent_army, dict) else self.opponent_army,
             "battle_round": self.battle_round,
             "army_turn": self.army_turn,
-            "player_points": self.player_points,
-            "opponent_points": self.opponent_points,
+            "player_score": self.player_score,
+            "opponent_score": self.opponent_score,
+            "battle_log": self.battle_log,
             "archived": self.archived,  # <-- add this line
             "timestamp": self.timestamp.isoformat(),
         }

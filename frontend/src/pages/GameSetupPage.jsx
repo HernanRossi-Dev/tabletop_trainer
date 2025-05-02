@@ -94,8 +94,8 @@ function GameSetupPage() {
       battleName: battleName(),
       battleName: battleName(),
       army_turn: 'TBD',
-      player_points: 0,
-      opponent_points: 0,
+      player_score: 0,
+      opponent_score: 0,
     };
 
     try {

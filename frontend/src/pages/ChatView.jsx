@@ -1,0 +1,142 @@
+import { createSignal, For } from "solid-js";
+import styles from "./ActiveBattle.module.css";
+import { activeBattle, clearBattle, replaceBattle, updateBattle } from "../store/battle_store";
+import { user  } from "../store/user_store";
+import { parseBattle } from '../types/battle_type';
+import {
+    Typography,
+} from "@suid/material";
+
+export default function ChatView() {
+    const [messages, setMessages] = createSignal([]);
+    const [input, setInput] = createSignal("");
+    const [recording, setRecording] = createSignal(false);
+    const parsed_battle = parseBattle(activeBattle);
+   
+    function appendToChat(chunk) {
+        setMessages(msgs => [
+            ...msgs,
+            { sender: "ai", text: chunk }
+        ]);
+    }
+
+    // Placeholder: handle sending a chat message
+    const handleSend = () => {
+        console.log("Sending message:", input());
+        if (input().trim()) {
+            setMessages([...messages(), { sender: "user", text: input() }]);
+            setInput("");
+            const battle_log = parsed_battle.battle_log;
+            console.log("battle_log:", battle_log);
+            if (battle_log && Object.keys(battle_log).length > 0) {
+                return messages().map(msg => (
+                    <div class={msg.sender === "user" ? styles.userMsg : styles.aiMsg}>
+                        {msg.text}
+                    </div>
+                ));
+            } else {
+                const init_message = `Introduce yourself to the Oppenent, you are the Battle Commander AI. You are an exper Warhammer 40K player. You are commanding the ${parsed_battle.opponent_army.faction}`;
+                const user_id = user.id;
+                fetch('http://127.0.0.1:5000/api/interactions/text/stream', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization':  `Bearer ${user.jwt}` },
+                    body: JSON.stringify({ user_id, "text": init_message })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.llm_response) {
+                        setMessages(msgs => [
+                            ...msgs,
+                            { sender: "ai", text: data.llm_response }
+                        ]);
+                        updateBattle({ battle_log: data.llm_response });
+                    }
+                })
+                .catch(err => {
+                    setMessages(msgs => [
+                        ...msgs,
+                        { sender: "ai", text: "Error: Could not get response from AI." }
+                    ]);
+                });
+            }
+        }
+    };
+
+    // Placeholder: handle file upload
+    const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // TODO: send file to backend
+            setMessages([...messages(), { sender: "user", text: `Uploaded file: ${file.name}` }]);
+        }
+    };
+
+    // Placeholder: handle video upload
+    const handleVideoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // TODO: send video to backend
+            setMessages([...messages(), { sender: "user", text: `Uploaded video: ${file.name}` }]);
+        }
+    };
+
+    // Placeholder: handle audio recording
+    const handleRecordAudio = () => {
+        setRecording(!recording());
+        // TODO: implement audio recording and send to backend
+        if (!recording()) {
+            setMessages([...messages(), { sender: "user", text: "Audio recording sent." }]);
+        }
+    };
+
+    return (
+        <div class={styles.container}>
+            <div class={styles.rightPanel}>
+                <Typography variant="h4"
+                    component="div"
+                    sx={{
+                        fontWeight: 700,
+                        fontFamily: '"Share Tech Mono", "Iceland", "Audiowide", "Roboto Mono", monospace',
+                        mr: 2,
+                        letterSpacing: 2,
+                    }}
+                >
+                    Command AI
+                </Typography>
+                <div class={styles.chatView}>
+                    <For each={messages()}>
+                        {msg => (
+                            <div class={msg.sender === "user" ? styles.userMsg : styles.aiMsg}>
+                                {msg.text}
+                            </div>
+                        )}
+                    </For>
+                </div>
+                <div class={styles.chatInputRow}>
+                    <input
+                        class={styles.chatInput}
+                        value={input()}
+                        onInput={e => setInput(e.currentTarget.value)}
+                        onKeyDown={e => e.key === "Enter" && handleSend()}
+                        placeholder="Type your message..."
+                    />
+                    <button class={styles.sendButton} onClick={handleSend}>Send</button>
+                </div>
+                <div class={styles.uploadRow}>
+                    <label class={styles.uploadButton}>
+                        Upload File
+                        <input type="file" style={{ display: "none" }} onChange={handleFileUpload} />
+                    </label>
+                    <label class={styles.uploadButton}>
+                        Upload Video
+                        <input type="file" accept="video/*" style={{ display: "none" }} onChange={handleVideoUpload} />
+                    </label>
+                    <button class={styles.recordButton} onClick={handleRecordAudio}>
+                        {recording() ? "Stop Recording" : "Record Audio"}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+

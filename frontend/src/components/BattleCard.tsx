@@ -24,10 +24,10 @@ function BattleCard(props: BattleCardProps) {
         <p><strong>Army Turn:</strong> {parsed_battle.army_turn}</p>
       </div>
       <div class={styles.armiesSection}>
-        <h3><strong>Player Army:</strong> {parsed_battle.player_army.faction} <br></br> <strong>Points:</strong> {parsed_battle.player_points}</h3>
+        <h3><strong>Player Army:</strong> {parsed_battle.player_army.faction} <br></br> <strong>Points:</strong> {parsed_battle.player_score}</h3>
       </div>
       <div class={styles.armiesSection}>
-        <h3><strong>Opponent Army:</strong> {parsed_battle.opponent_army.faction} <br></br><strong>Points:</strong> {parsed_battle.opponent_points}</h3>
+        <h3><strong>Opponent Army:</strong> {parsed_battle.opponent_army.faction} <br></br><strong>Points:</strong> {parsed_battle.opponent_score}</h3>
       </div>
       <div class={styles.actions} style={{ display: 'flex', 'justify-content': 'center', gap: '1rem' }}>
          <button

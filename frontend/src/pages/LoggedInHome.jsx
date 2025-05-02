@@ -13,7 +13,7 @@ function LoggedInHome() {
         </div>
       </div>
       <div class="card">
-        <button onClick={() => navigate('/battle')}>
+        <button onClick={() => navigate('/battles')}>
           Thank you for logging in! Click here see your ongoing battles or to start a new battle.
         </button>
       </div>

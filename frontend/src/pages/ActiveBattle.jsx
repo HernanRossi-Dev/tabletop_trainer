@@ -1,82 +1,41 @@
-import { createSignal, For } from "solid-js";
+import { createSignal  } from "solid-js";
 import styles from "./ActiveBattle.module.css";
-import { activeBattle, clearBattle, replaceBattle } from "../store/battle_store";
+import { activeBattle } from "../store/battle_store";
 import { parseBattle } from '../types/battle_type';
-import { Typography } from "@suid/material";
+import Remove from "@suid/icons-material/Remove";
+import Add from "@suid/icons-material/Add";
+import {
+    Button,
+    Typography,
+} from "@suid/material";
+import ChatView from "./ChatView";
 
 export default function ActiveBattle() {
-    const [messages, setMessages] = createSignal([]);
-    const [input, setInput] = createSignal("");
-    const [recording, setRecording] = createSignal(false);
     const parsed_battle = parseBattle(activeBattle);
     const [round, setRound] = createSignal(Number(parsed_battle.battle_round) || 1);
-    console.log(`ActiveBattle: ${JSON.stringify(activeBattle)}`);
-    // Placeholder: handle sending a chat message
-    const handleSend = () => {
-        if (input().trim()) {
-            setMessages([...messages(), { sender: "user", text: input() }]);
-            setInput("");
-            // TODO: send to backend and handle AI response
-        }
-    };
+    const [playerScore, setplayerScore] = createSignal(Number(parsed_battle.player_score) || 0);
+    const [opponentScore, setopponentScore] = createSignal(Number(parsed_battle.opponent_score) || 0);
 
-    // Placeholder: handle file upload
-    const handleFileUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            // TODO: send file to backend
-            setMessages([...messages(), { sender: "user", text: `Uploaded file: ${file.name}` }]);
-        }
-    };
-
-    // Placeholder: handle video upload
-    const handleVideoUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            // TODO: send video to backend
-            setMessages([...messages(), { sender: "user", text: `Uploaded video: ${file.name}` }]);
-        }
-    };
-
-    // Placeholder: handle audio recording
-    const handleRecordAudio = () => {
-        setRecording(!recording());
-        // TODO: implement audio recording and send to backend
-        if (!recording()) {
-            setMessages([...messages(), { sender: "user", text: "Audio recording sent." }]);
-        }
-    };
 
     return (
         <div class={styles.container}>
-            {/* Left: Battle Details */}
             <div class={styles.leftPanel}>
-                <Typography variant="h4"
+                <Typography
+                    variant="h3"
                     component="div"
                     sx={{
                         fontWeight: 700,
-                        fontFamily: '"Share Tech Mono", "Orbitron", "Audiowide", "Roboto Mono", monospace',
+                        fontFamily: '"Share Tech Mono", "Iceland", "Audiowide", "Roboto Mono", monospace',
                         mr: 2,
-                        letterSpacing: 2,
-                        textTransform: "uppercase",
+                        letterSpacing: 1,
+                        pb: 1,
                     }}
                 >
-                    Battle Details
+                    Battle Name: {parsed_battle.battle_name}
                 </Typography>
-                {/* TODO: Render actual battle details here */}
-                <div class={styles.battleDetails}>
-                    <p>Battle Name: <b>{parsed_battle.battle_name}</b></p>
-                    <p>Your Army: <b>{parsed_battle.player_army.faction}</b></p>
-                    <p>Opponent Army: <b>{parsed_battle.opponent_army.faction}</b></p>
-
-                    {/* Add more details as needed */}
-                </div>
                 <div class={styles.roundSliderRow}>
-                    <button
-                        class={styles.roundButton}
-                        onClick={() => setRound(r => Math.max(1, r - 1))}
-                        aria-label="Previous Round"
-                    >−</button>
+                    <Button color="inherit" startIcon={<Remove />} onClick={() => setRound(r => Math.max(1, r - 1))}>
+                    </Button>
                     <input
                         type="range"
                         min={1}
@@ -86,61 +45,58 @@ export default function ActiveBattle() {
                         class={styles.roundSlider}
                         style={{ margin: "0 1rem", flex: 1 }}
                     />
-                    <button
-                        class={styles.roundButton}
-                        onClick={() => setRound(r => Math.min(10, r + 1))}
-                        aria-label="Next Round"
-                    >+</button>
-                    <span class={styles.roundLabel}>Round: <b>{round()}</b></span>
+                    <Button color="inherit" startIcon={<Add />} onClick={() => setRound(r => Math.min(5, r + 1))}>
+                    </Button>
+                    <Typography
+                        variant="h6"
+                        component="div"
+                        sx={{
+                            fontWeight: 700,
+                            fontFamily: '"Share Tech Mono", "Iceland", "Audiowide", "Roboto Mono", monospace',
+                            letterSpacing: 1,
+                        }}
+                    >
+                        Battle Round: <b>{round()}</b>
+                    </Typography>
                 </div>
-            </div>
-
-            {/* Right: Live Chat */}
-            <div class={styles.rightPanel}>
-                <Typography variant="h4"
-                    component="div"
-                    sx={{
-                        fontWeight: 700,
-                        fontFamily: '"Share Tech Mono", "Orbitron", "Audiowide", "Roboto Mono", monospace',
-                        mr: 2,
-                        letterSpacing: 2,
-                        textTransform: "uppercase",
-                    }}
-                >
-                    Commander AI
-                </Typography>
-                <div class={styles.chatView}>
-                    <For each={messages()}>
-                        {msg => (
-                            <div class={msg.sender === "user" ? styles.userMsg : styles.aiMsg}>
-                                {msg.text}
+                <div class={styles.battleDetails}>
+                    <Typography sx={{fontFamily: '"Share Tech Mono", "Iceland", "Audiowide", "Roboto Mono", monospace'}}>
+                        <div class={styles.battleDetails}>
+                            <div class={styles.armyBlock}>
+                                <span class={styles.armyTitle}>Your Army: <b>{parsed_battle.player_army.faction}</b></span>
+                                <span class={styles.armyDetail}>Detachment: {parsed_battle.player_army.faction}</span>
+                                <span class={styles.armyDetail}>Score: 
+                                    <Button color="inherit" sx={{ paddingLeft: 0.5, paddingRight: 0.5, minWidth: 0.05 }} startIcon={<Remove />} onClick={() => setplayerScore(r => Math.max(0, r - 1))}></Button> 
+                                    <span class={styles.armyScore}>{playerScore()}</span>
+                                    <Button color="inherit" sx={{ paddingLeft: 0.5, paddingRight: 0.5, minWidth: 0.05 }} startIcon={<Add />} onClick={() => setplayerScore(r => Math.min(100, r + 2))}>2</Button> 
+                                </span>
                             </div>
-                        )}
-                    </For>
+                            <div class={styles.armyBlock}>
+                                <span class={styles.armyTitle}>Opponent Army: <b>{parsed_battle.opponent_army.faction}</b></span>
+                                <span class={styles.armyDetail}>Detachment: {parsed_battle.opponent_army.faction}</span>
+                                <span class={styles.armyDetail}>Score: 
+                                    <Button sx={{paddingLeft: 1.5, paddingRight: 0.5, minWidth: 0.05 }} color="inherit" startIcon={<Remove />} onClick={() => setopponentScore(r => Math.max(0, r - 1))}></Button> 
+                                    <span class={styles.armyScore}>{opponentScore()}</span>
+                                    <Button sx={{ paddingLeft: 0.5, paddingRight: 0.5, minWidth: 0.05 }} color="inherit" startIcon={<Add />} onClick={() => setopponentScore(r => Math.min(100, r + 2))}>2</Button> 
+                                </span>
+                            </div>
+                        </div>
+                    </Typography>
                 </div>
-                <div class={styles.chatInputRow}>
-                    <input
-                        class={styles.chatInput}
-                        value={input()}
-                        onInput={e => setInput(e.currentTarget.value)}
-                        onKeyDown={e => e.key === "Enter" && handleSend()}
-                        placeholder="Type your message..."
-                    />
-                    <button class={styles.sendButton} onClick={handleSend}>Send</button>
-                </div>
-                <div class={styles.uploadRow}>
-                    <label class={styles.uploadButton}>
-                        Upload File
-                        <input type="file" style={{ display: "none" }} onChange={handleFileUpload} />
-                    </label>
-                    <label class={styles.uploadButton}>
-                        Upload Video
-                        <input type="file" accept="video/*" style={{ display: "none" }} onChange={handleVideoUpload} />
-                    </label>
-                    <button class={styles.recordButton} onClick={handleRecordAudio}>
-                        {recording() ? "Stop Recording" : "Record Audio"}
+                <div style={{ marginTop: "auto", paddingTop: "2rem" }}>
+                    <button
+                        class={styles.saveButton}
+                        onClick={() => {
+                            // TODO: Save logic here (e.g., send round or other changes to backend)
+                            alert("Battle state saved!");
+                        }}
+                    >
+                        Save
                     </button>
                 </div>
+            </div>
+            <div class={styles.rightPanel}>
+               <ChatView></ChatView>
             </div>
         </div>
     );

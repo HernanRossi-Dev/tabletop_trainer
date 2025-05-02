@@ -18,13 +18,14 @@ function loadBattle(): Battle {
     height: "",
     width: "",
     army_turn: "",
-    battle_round: "",
+    battle_round: "0",
     player_army: "",
     opponent_army: "",
-    player_points: "",
-    opponent_points: "",
+    player_score: "0",
+    opponent_score: "0",
     timestamp: "",
     archived: false,
+    battle_log: "{}",
   };
 }
 
@@ -57,10 +58,11 @@ export function clearBattle() {
     battle_round: "",
     player_army: "",
     opponent_army: "",
-    player_points: "",
-    opponent_points: "",
+    player_score: "0",
+    opponent_score: "0",
     timestamp: "",
     archived: false,
+    battle_log: "{}",
   };
   setBattle(emptyBattle);
   persistBattle(emptyBattle);

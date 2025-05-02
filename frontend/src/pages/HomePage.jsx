@@ -1,5 +1,5 @@
 import { useNavigate } from '@solidjs/router'
-import sectorCommandLogo from '../assets/sc_logo.png'
+import sectorCommandLogo from '../assets/command_logo.png'
 import '../App.css'
 
 function HomePage() {
@@ -12,11 +12,11 @@ function HomePage() {
           <img src={sectorCommandLogo} class="logo" />
         </div>
       </div>
-      <div class="card">
+      {/* <div class="card">
         <button onClick={() => navigate('/battle')}>
           Go to Battles
         </button>
-      </div>
+      </div> */}
     </>
   )
 }

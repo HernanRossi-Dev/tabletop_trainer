@@ -3,7 +3,7 @@ import uuid
 from psycopg2 import IntegrityError
 import requests
 import jwt
-from flask import request, jsonify, make_response
+from flask import request, jsonify, make_response, Response, stream_with_context
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
 from backend.helpers import get_jwt_identity, jwt_required
@@ -12,6 +12,7 @@ from backend.models.Interaction import Interaction
 from backend.models.Battle import Battle
 import sys
 import os
+from langchain_google_genai import ChatGoogleGenerativeAI
 from sqlalchemy import or_
 from backend.parameters import JWT_SECRET, JWT_ALGORITHM
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -191,8 +192,8 @@ def create_battle(_context=None):
                         opponent_army=opponent_army,
                         battle_round="0",
                         army_turn="0",
-                        player_points="0",
-                        opponent_points="0",
+                        player_score="0",
+                        opponent_score="0",
                         timestamp=datetime.now()
                       )
     try:
@@ -214,56 +215,65 @@ def create_battle(_context=None):
         return jsonify({"error": "An unexpected error occurred"}), 500
 
 
-@app.route('/api/interactions/initial', methods=['POST'])
+@app.route('/api/interactions/text/stream', methods=['POST'])
 @jwt_required
-def post_initial_interaction():
+def post_text_interaction_stream(_context=None):
     """
-    3: Post Initial Interaction Endpoint
-    Logs the initial interaction setup to the database.
-    Expects JSON like {'user_id': 'some_uuid', 'initial_context': {...}}
+    4: Post Text Interaction Endpoint
+    Handles text input, calls LLM (Gemini), logs interaction.
+    Expects JSON like {'user_id': 'some_uuid', 'text': 'Users message'}
     """
-    if not request.is_json:
-        return jsonify({"error": "Request must be JSON"}), 400
-
+    print(f"--- POST TEXT INTERACTION STREAM ENDPOINT CALLED --- {request.get_json()}") # Debugging log
     data = request.get_json()
     user_id_str = data.get('user_id')
-    initial_context = data.get('initial_context', {})
+    user_text = data.get('text')
 
-    if not user_id_str:
-        return jsonify({"error": "Missing 'user_id' in request body"}), 400
+    if not user_id_str or not user_text:
+        print(f"--- not populated") # Debugging log
+        return jsonify({"error": "Missing 'user_id' or 'text' in request body"}), 400
 
     try:
-        user_id = uuid.UUID(user_id_str) # Convert string to UUID object
+        user_id = uuid.UUID(user_id_str)
     except ValueError:
         return jsonify({"error": "Invalid user_id format"}), 400
-
-    # Verify user exists in DB
+    print(f"--- user_id: {user_id} ---") # Debugging log
+    # Verify user exists
     user = db.session.get(User, user_id)
     if user is None:
         return jsonify({"error": "Users not found"}), 404
 
-    # --- Placeholder for your logic ---
-    # Initialize conversation state externally if needed
-    # ----------------------------------
+    # --- LangChain Gemini LLM Logic ---
+    try:
+        llm = ChatGoogleGenerativeAI(
+            model="models/gemini-2.0-flash",
+            google_api_key=os.environ["GOOGLEAI_API_KEY"]
+        )
+        llm_response = llm.invoke(user_text)
+        llm_response_text = getattr(llm_response, "content", str(llm_response))
+    except Exception as e:
+        print(f"Error calling Gemini API: {e}")
+        return jsonify({"error": "Failed to call Gemini API", "details": str(e)}), 500
 
     # Create Interaction log entry
     new_interaction = Interaction(
         user_id=user_id,
-        type='initial',
-        context=initial_context # Store context as JSONB
+        type='text',
+        user_input=user_text,
+        llm_output=llm_response_text
     )
 
     try:
         db.session.add(new_interaction)
         db.session.commit()
-        print(f"Initial interaction for user {user_id} logged.") # Server log
+        print(f"Text interaction for user {user_id} logged.") # Server log
         return jsonify({
-            "message": "Initial interaction processed successfully",
-            "interaction_id": str(new_interaction.id) # Return the new interaction ID
+            "message": "Text interaction processed successfully",
+            "llm_response": llm_response_text,
+            "interaction_id": str(new_interaction.id)
         }), 200
     except Exception as e:
         db.session.rollback()
-        print(f"Error logging initial interaction: {e}")
+        print(f"Error logging text interaction: {e}")
         return jsonify({"error": "An unexpected error occurred logging interaction"}), 500
 
 
