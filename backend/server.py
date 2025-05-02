@@ -250,6 +250,7 @@ def post_text_interaction_stream(_context=None):
         )
         llm_response = llm.invoke(user_text)
         llm_response_text = getattr(llm_response, "content", str(llm_response))
+        print(f"--- LLM Response: {llm_response_text} ---") # Debugging log
     except Exception as e:
         print(f"Error calling Gemini API: {e}")
         return jsonify({"error": "Failed to call Gemini API", "details": str(e)}), 500

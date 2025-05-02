@@ -38,16 +38,28 @@
 }
 
 .userMsg {
-    text-align: right;
+    align-self: flex-end;
+    background: #4caf50; /* Green for user */
+    color: #fff;
+    padding: 0.6em 1.2em;
+    border-radius: 18px 18px 4px 18px;
     margin: 0.5rem 0;
-    color: #1976d2;
-}
-
-.aiMsg {
-    text-align: left;
+    max-width: 70%;
+    word-break: break-word;
+    box-shadow: 0 2px 8px rgba(76,175,80,0.08);
+  }
+  
+  .aiMsg {
+    align-self: flex-start;
+    background: #e0e0e0; /* Light gray for AI */
+    color: #222;
+    padding: 0.6em 1.2em;
+    border-radius: 18px 18px 18px 4px;
     margin: 0.5rem 0;
-    color: #333;
-}
+    max-width: 70%;
+    word-break: break-word;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
 
 .chatInputRow {
     display: flex;

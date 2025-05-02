@@ -3,6 +3,7 @@ import styles from "./ActiveBattle.module.css";
 import { activeBattle, clearBattle, replaceBattle, updateBattle } from "../store/battle_store";
 import { user  } from "../store/user_store";
 import { parseBattle } from '../types/battle_type';
+import ChatBubble from "../components/ChatBubble";
 import {
     Typography,
 } from "@suid/material";
@@ -13,52 +14,58 @@ export default function ChatView() {
     const [recording, setRecording] = createSignal(false);
     const parsed_battle = parseBattle(activeBattle);
    
-    function appendToChat(chunk) {
-        setMessages(msgs => [
-            ...msgs,
-            { sender: "ai", text: chunk }
-        ]);
+    function getNextMessageNumber(battle_log) {
+        const keys = Object.keys(battle_log || {});
+        if (keys.length === 0) return 1;
+        return Math.max(...keys.map(Number)) + 1;
+    }
+
+    function setNextMesage(message) {
+        const battle_log = parsed_battle.battle_log || {};
+        const nextMsgNum = getNextMessageNumber(battle_log);
+        const updatedLog = {
+            ...battle_log,
+            [nextMsgNum]: { message: input(), creator: "user" }
+        };
+        updateBattle({ battle_log: JSON.stringify(updatedLog) });
     }
 
     // Placeholder: handle sending a chat message
     const handleSend = () => {
-        console.log("Sending message:", input());
-        if (input().trim()) {
-            setMessages([...messages(), { sender: "user", text: input() }]);
+        var text_input = input().trim();
+        console.log("Sending message:", text_input);
+        const battle_log = parsed_battle.battle_log || {};
+        if (text_input) {
+            setMessages([...messages(), { sender: "user", text: text_input}]);
             setInput("");
-            const battle_log = parsed_battle.battle_log;
+
             console.log("battle_log:", battle_log);
-            if (battle_log && Object.keys(battle_log).length > 0) {
-                return messages().map(msg => (
-                    <div class={msg.sender === "user" ? styles.userMsg : styles.aiMsg}>
-                        {msg.text}
-                    </div>
-                ));
-            } else {
+            if (!battle_log && !Object.keys(battle_log).length > 0) {
                 const init_message = `Introduce yourself to the Oppenent, you are the Battle Commander AI. You are an exper Warhammer 40K player. You are commanding the ${parsed_battle.opponent_army.faction}`;
-                const user_id = user.id;
-                fetch('http://127.0.0.1:5000/api/interactions/text/stream', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization':  `Bearer ${user.jwt}` },
-                    body: JSON.stringify({ user_id, "text": init_message })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.llm_response) {
-                        setMessages(msgs => [
-                            ...msgs,
-                            { sender: "ai", text: data.llm_response }
-                        ]);
-                        updateBattle({ battle_log: data.llm_response });
-                    }
-                })
-                .catch(err => {
+                text_input = `${text_input}. ${init_message}` ;
+            }
+            const user_id = user.id;
+            fetch('http://127.0.0.1:5000/api/interactions/text/stream', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization':  `Bearer ${user.jwt}` },
+                body: JSON.stringify({ user_id, "text": text_input })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.llm_response) {
                     setMessages(msgs => [
                         ...msgs,
-                        { sender: "ai", text: "Error: Could not get response from AI." }
+                        { sender: "ai", text: data.llm_response }
                     ]);
-                });
-            }
+                    setNextMesage(data.llm_response);
+                }
+            })
+            .catch(err => {
+                setMessages(msgs => [
+                    ...msgs,
+                    { sender: "ai", text: "Error: Could not get response from AI." }
+                ]);
+            });   
         }
     };
 
@@ -93,22 +100,27 @@ export default function ChatView() {
         <div class={styles.container}>
             <div class={styles.rightPanel}>
                 <Typography variant="h4"
-                    component="div"
                     sx={{
                         fontWeight: 700,
                         fontFamily: '"Share Tech Mono", "Iceland", "Audiowide", "Roboto Mono", monospace',
-                        mr: 2,
+                        // mr: 2,
                         letterSpacing: 2,
+                        mt:-3
                     }}
                 >
                     Command AI
                 </Typography>
                 <div class={styles.chatView}>
-                    <For each={messages()}>
+                    {/* <For each={messages()}>
                         {msg => (
                             <div class={msg.sender === "user" ? styles.userMsg : styles.aiMsg}>
                                 {msg.text}
                             </div>
+                        )}
+                    </For> */}
+                    <For each={messages()}>
+                        {msg => (
+                            <ChatBubble text={msg.text} sender={msg.sender} />
                         )}
                     </For>
                 </div>
