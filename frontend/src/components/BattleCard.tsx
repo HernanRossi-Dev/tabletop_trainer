@@ -1,9 +1,8 @@
 // src/components/BattleCard.tsx
 import type { Battle } from '../types/battle'; // Adjust path if needed
 import styles from './BattleCard.module.css'; // We'll create this CSS file
-import { parseBattle } from '../types/battle_type';
 import { useNavigate } from '@solidjs/router';
-import { activeBattle } from "../store/battle_store";
+import { activeBattle } from "../store/BattleStore";
 
 
 interface BattleCardProps {
@@ -14,20 +13,27 @@ interface BattleCardProps {
 function BattleCard(props: BattleCardProps) {
   const navigate = useNavigate();
   if (!activeBattle) return null;
-  const parsed_battle = parseBattle(activeBattle);
   return (
     <div class={styles.battleCard}>
-      <h2>Battle Name: {parsed_battle.battle_name}</h2>
+      <h2>Battle Name: {activeBattle.battleName}</h2>
       <div class={styles.details}>
-        <p><strong>Round:</strong> {parsed_battle.battle_round}</p>
-        <p><strong>Board Size:</strong> {parsed_battle.width}" x {parsed_battle.height}"</p>
-        <p><strong>Army Turn:</strong> {parsed_battle.army_turn}</p>
+        <p><strong>Round:</strong> {activeBattle.battleRound}</p>
+        <p><strong>Board Size:</strong> {activeBattle.width}" x {activeBattle.height}"</p>
+        <p><strong>Army Turn:</strong> {activeBattle.armyTurn}</p>
       </div>
       <div class={styles.armiesSection}>
-        <h3><strong>Player Army:</strong> {parsed_battle.player_army.faction} <br></br> <strong>Points:</strong> {parsed_battle.player_score}</h3>
+        <h3>
+          <strong>Player Army:</strong> {activeBattle.playerArmy?.faction ?? "Unknown"}
+          <br />
+          <strong>Points:</strong> {activeBattle.playerScore ?? "N/A"}
+        </h3>
       </div>
       <div class={styles.armiesSection}>
-        <h3><strong>Opponent Army:</strong> {parsed_battle.opponent_army.faction} <br></br><strong>Points:</strong> {parsed_battle.opponent_score}</h3>
+        <h3>
+          <strong>Opponent Army:</strong> {activeBattle.opponentArmy?.faction ?? "Unknown"}
+          <br />
+          <strong>Points:</strong> {activeBattle.opponentScore ?? "N/A"}
+        </h3>
       </div>
       <div class={styles.actions} style={{ display: 'flex', 'justify-content': 'center', gap: '1rem' }}>
          <button

@@ -22,6 +22,21 @@ class Battle(db.Model):
     archived = db.Column(db.Boolean, default=False) # Archive the battle
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.now(), index=True)
     battle_log = db.Column(db.JSON, nullable=False)
+    """
+    The battle log will contain all of the chat history the user had with the model this will be stored in Dict
+    {   
+        1: { // The key is the message number
+            "creator": "user", // The creator of the message
+            "message": "message",   // The message itself
+            "timestamp": "timestamp"
+        },
+        2: {
+            "creator": "agent",
+            "message": "message",
+            "timestamp": "timestamp"
+        }
+    }
+    """
     # Relationships
     def __repr__(self):
         return f'<Battle {self.battle_name} (User: {self.user_id}, ID: {self.id})>'
@@ -41,7 +56,7 @@ class Battle(db.Model):
             "player_score": self.player_score,
             "opponent_score": self.opponent_score,
             "battle_log": self.battle_log,
-            "archived": self.archived,  # <-- add this line
+            "archived": self.archived, 
             "timestamp": self.timestamp.isoformat(),
         }
     

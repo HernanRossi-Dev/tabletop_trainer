@@ -1,8 +1,7 @@
 import { createSignal, For } from "solid-js";
 import styles from "./ActiveBattle.module.css";
-import { activeBattle, clearBattle, replaceBattle, updateBattle } from "../store/battle_store";
-import { user  } from "../store/user_store";
-import { parseBattle } from '../types/battle_type';
+import { activeBattle, clearBattle, replaceBattle, updateBattle } from "../store/BattleStore";
+import { user  } from "../store/UserStore";
 import ChatBubble from "../components/ChatBubble";
 import {
     Typography,
@@ -12,7 +11,6 @@ export default function ChatView() {
     const [messages, setMessages] = createSignal([]);
     const [input, setInput] = createSignal("");
     const [recording, setRecording] = createSignal(false);
-    const parsed_battle = parseBattle(activeBattle);
    
     function getNextMessageNumber(battle_log) {
         const keys = Object.keys(battle_log || {});
@@ -21,7 +19,7 @@ export default function ChatView() {
     }
 
     function setNextMesage(message) {
-        const battle_log = parsed_battle.battle_log || {};
+        const battle_log = activeBattle.battle_log || {};
         const nextMsgNum = getNextMessageNumber(battle_log);
         const updatedLog = {
             ...battle_log,
@@ -34,17 +32,17 @@ export default function ChatView() {
     const handleSend = () => {
         var text_input = input().trim();
         console.log("Sending message:", text_input);
-        const battle_log = parsed_battle.battle_log || {};
+        const battle_log = activeBattle.battle_log || {};
         if (text_input) {
             setMessages([...messages(), { sender: "user", text: text_input}]);
             setInput("");
 
             console.log("battle_log:", battle_log);
             if (!battle_log && !Object.keys(battle_log).length > 0) {
-                const init_message = `Introduce yourself to the Oppenent, you are the Battle Commander AI. You are an exper Warhammer 40K player. You are commanding the ${parsed_battle.opponent_army.faction}`;
+                const init_message = `Introduce yourself to the Oppenent, you are the Battle Commander AI. You are an exper Warhammer 40K player. You are commanding the ${activeBattle.opponent_army.faction}`;
                 text_input = `${text_input}. ${init_message}` ;
             }
-            const user_id = user.id;
+            const userId = user.id;
             fetch('http://127.0.0.1:5000/api/interactions/text/stream', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization':  `Bearer ${user.jwt}` },

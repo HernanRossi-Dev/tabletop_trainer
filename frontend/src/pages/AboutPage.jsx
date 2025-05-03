@@ -2,7 +2,7 @@ import sectorCommandLogo from '../assets/sc_logo.png'
 import { useNavigate } from '@solidjs/router'
 import '../App.css'
 import { Typography } from "@suid/material";
-import { user } from "../store/user_store";
+import { user } from "../store/UserStore";
 
 function AboutPage() {
     const navigate = useNavigate();

@@ -1,7 +1,6 @@
 import { createSignal  } from "solid-js";
 import styles from "./ActiveBattle.module.css";
-import { activeBattle } from "../store/battle_store";
-import { parseBattle } from '../types/battle_type';
+import { activeBattle } from "../store/BattleStore";
 import Remove from "@suid/icons-material/Remove";
 import Add from "@suid/icons-material/Add";
 import {
@@ -11,10 +10,9 @@ import {
 import ChatView from "./ChatView";
 
 export default function ActiveBattle() {
-    const parsed_battle = parseBattle(activeBattle);
-    const [round, setRound] = createSignal(Number(parsed_battle.battle_round) || 1);
-    const [playerScore, setplayerScore] = createSignal(Number(parsed_battle.player_score) || 0);
-    const [opponentScore, setopponentScore] = createSignal(Number(parsed_battle.opponent_score) || 0);
+    const [round, setRound] = createSignal(Number(activeBattle.battleRound) || 1);
+    const [playerScore, setplayerScore] = createSignal(Number(activeBattle.playerScore) || 0);
+    const [opponentScore, setopponentScore] = createSignal(Number(activeBattle.opponentScore) || 0);
 
 
     return (
@@ -31,7 +29,7 @@ export default function ActiveBattle() {
                         pb: 1,
                     }}
                 >
-                    Battle Name: {parsed_battle.battle_name}
+                    Battle Name: {activeBattle.battleName}
                 </Typography>
                 <div class={styles.roundSliderRow}>
                     <Button color="inherit" startIcon={<Remove />} onClick={() => setRound(r => Math.max(1, r - 1))}>
@@ -63,8 +61,8 @@ export default function ActiveBattle() {
                     <Typography sx={{fontFamily: '"Share Tech Mono", "Iceland", "Audiowide", "Roboto Mono", monospace'}}>
                         <div class={styles.battleDetails}>
                             <div class={styles.armyBlock}>
-                                <span class={styles.armyTitle}>Your Army: <b>{parsed_battle.player_army.faction}</b></span>
-                                <span class={styles.armyDetail}>Detachment: {parsed_battle.player_army.faction}</span>
+                                <span class={styles.armyTitle}>Your Army: <b>{activeBattle.playerArmy.faction}</b></span>
+                                <span class={styles.armyDetail}>Detachment: {activeBattle.playerArmy.faction}</span>
                                 <span class={styles.armyDetail}>Score: 
                                     <Button color="inherit" sx={{ paddingLeft: 0.5, paddingRight: 0.5, minWidth: 0.05 }} startIcon={<Remove />} onClick={() => setplayerScore(r => Math.max(0, r - 1))}></Button> 
                                     <span class={styles.armyScore}>{playerScore()}</span>
@@ -72,8 +70,8 @@ export default function ActiveBattle() {
                                 </span>
                             </div>
                             <div class={styles.armyBlock}>
-                                <span class={styles.armyTitle}>Opponent Army: <b>{parsed_battle.opponent_army.faction}</b></span>
-                                <span class={styles.armyDetail}>Detachment: {parsed_battle.opponent_army.faction}</span>
+                                <span class={styles.armyTitle}>Opponent Army: <b>{activeBattle.opponentArmy.faction}</b></span>
+                                <span class={styles.armyDetail}>Detachment: {activeBattle.opponentArmy.faction}</span>
                                 <span class={styles.armyDetail}>Score: 
                                     <Button sx={{paddingLeft: 1.5, paddingRight: 0.5, minWidth: 0.05 }} color="inherit" startIcon={<Remove />} onClick={() => setopponentScore(r => Math.max(0, r - 1))}></Button> 
                                     <span class={styles.armyScore}>{opponentScore()}</span>

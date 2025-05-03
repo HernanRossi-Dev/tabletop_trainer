@@ -1,8 +1,8 @@
-import { user, updateUser, replaceUser } from "../store/user_store";
+import { user, updateUser, replaceUser } from "../store/UserStore";
 import { createSignal } from "solid-js";
 
 export default function UserDetails() {
-  const [avatarPreview, setAvatarPreview] = createSignal(user.profile_picture);
+  const [avatarPreview, setAvatarPreview] = createSignal(user.profilePicture);
 
   // Handle avatar file selection
   const handleAvatarChange = async (e) => {
@@ -26,13 +26,13 @@ export default function UserDetails() {
       },
       body: JSON.stringify({
         user_id: user.id,
-        profile_picture: avatar, // or any other fields you want to update
+        profilePicture: avatar, // or any other fields you want to update
       }),
     });
     if (response.ok) {
       const data = await response.json();
-      updateUser({ profile_picture: data.profile_picture });
-      setAvatarPreview(data.profile_picture);
+      updateUser({ profilePicture: data.profilePicture });
+      setAvatarPreview(data.profilePicture);
     } else {
       alert("Failed to upload avatar.");
     }

@@ -1,6 +1,6 @@
 import { createSignal, onMount, Show } from 'solid-js';
 import styles from './LoginPage.module.css'; // For styling
-import { user, replaceUser, UserProfile } from "../store/user_store";
+import { user, replaceUser, UserProfile } from "../store/UserStore";
 import { useNavigate } from '@solidjs/router';
 
 
@@ -142,10 +142,10 @@ function LoginPage() {
       console.log("Post Auth Response:", postAuthData);
       const profile: UserProfile = {
         jwt: postAuthData.access_token,
-        id: postAuthData.user.user_id,
+        id: postAuthData.user.userId,
         name: postAuthData.user.name,
         email: postAuthData.user.email,
-        profile_picture: postAuthData.user.profile_picture,
+        profilePicture: postAuthData.user.profilePicture,
         provider: 'google'
       };
       replaceUser(profile);
@@ -237,7 +237,7 @@ function LoginPage() {
       id: "",
       name: "",
       email: undefined,
-      profile_picture: undefined,
+      profilePicture: undefined,
       provider: "google"
   });
      setError(null);
@@ -281,8 +281,8 @@ function LoginPage() {
         </>
       }>
          <h1>Welcome, {user!.name}!</h1>
-         <Show when={user!.profile_picture}>
-           <img src={user!.profile_picture} alt="Profile picture" class={styles.profilePic}/>
+         <Show when={user!.profilePicture}>
+           <img src={user!.profilePicture} alt="Profile picture" class={styles.profilePic}/>
          </Show>
          <p>You are logged in via {user!.provider}.</p>
          <Show when={user!.email}><p>Email: {user!.email}</p></Show>

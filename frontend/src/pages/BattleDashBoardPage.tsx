@@ -7,9 +7,10 @@ import type { Battle } from '../types/battle';
 import BattleCard from '../components/BattleCard';
 import Modal from '../components/Modal';
 import styles from './BattleDashboardPage.module.css';
-import { user } from '../store/user_store';
+import { user } from '../store/UserStore';
 import { useLocation } from "@solidjs/router";
-import { activeBattle, clearBattle, replaceBattle } from "../store/battle_store";
+import { activeBattle, clearBattle, replaceBattle } from "../store/BattleStore";
+import { getBattleByUserId } from "../modules/Api";
 
 
 function BattleDashboardPage() {
@@ -18,7 +19,7 @@ function BattleDashboardPage() {
   const location = useLocation();
   const [showConfirmModal, setShowConfirmModal] = createSignal(false);
 
-  const loadOngoingBattle = async () => {
+  function loadOngoingBattle() {
     if (!user.id) {
       console.log("No user ID found. Cannot fetch battles.");
       clearBattle();
@@ -28,31 +29,21 @@ function BattleDashboardPage() {
       console.log("Current battle already set. Skipping fetch.");
       return;
     }
-    try {
-      const response = await fetch(`http://127.0.0.1:5000/api/battles?user_id=${user.id}`, {
-        method: 'GET',
-        headers: {
-          "Authorization": `Bearer ${user.jwt}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log("Battles Fetched:", data);
-      if (data.length > 0) {
-        const activeBattle = data.find((battle: Battle) => !battle.archived);
-        if (activeBattle) {
-          replaceBattle(activeBattle);
+    getBattleByUserId()
+      .then(fetchedBattle => {
+        if (!fetchedBattle) {
+          console.log("No active battle found for user.");
+          clearBattle();
+          return;
         }
-      }
-    } catch (error) {
-      console.error("Failed to fetch battles:", error);
-      alert("Failed to fetch battles. See console for details.");
-      clearBattle();
-    }
-  };
+        replaceBattle(fetchedBattle);
+      })
+      .catch(error => {
+        console.error("Failed to fetch battles:", error);
+        alert("Failed to fetch battles. See console for details.");
+        clearBattle();
+      });
+  }
 
   createEffect(() => {
     location.pathname;
@@ -77,6 +68,10 @@ function BattleDashboardPage() {
     clearBattle();
     setShowConfirmModal(false);
   };
+
+  function setCurrentBattle(_: null): void {
+    clearBattle();
+  }
 
   return (
     <div class={styles.dashboardContainer}>
@@ -142,18 +137,17 @@ function BattleDashboardPage() {
         </Modal>
       </Show>
 
-      {/* Delete Confirmation Modal */}
       <Show when={showConfirmModal()}>
         <Modal open={true} onClose={() => setShowConfirmModal(false)}>
           <h2>Confirm Delete</h2>
           <p>Are you sure you want to delete the current battle?</p>
-          <div style={{ display: "flex", gap: "1rem", 'justify-content': "flex-end" }}>
-            <button
+            <div style={{ display: "flex", gap: "1rem", 'justify-content': "center", 'align-items': "center" }}>
+            {/* <button
               class={styles.actionButton}
               onClick={() => setShowConfirmModal(false)}
             >
               Cancel
-            </button>
+            </button> */}
             <button
               class={`${styles.actionButton}`}
               onClick={confirmClearBattle}

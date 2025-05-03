@@ -10,7 +10,7 @@ import {
   MenuItem,
   IconButton,
 } from "@suid/material";
-import { user, replaceUser } from '../store/user_store';
+import { user, replaceUser } from '../store/UserStore';
 import { createSignal } from "solid-js";
 
 export default function BasicAppBar() {
@@ -39,7 +39,7 @@ export default function BasicAppBar() {
       id: "",
       name: "",
       email: undefined,
-      profile_picture: undefined,
+      profilePicture: undefined,
       provider: "google"
     });
     window.location.href = "/";
@@ -80,7 +80,7 @@ export default function BasicAppBar() {
             <>
               <IconButton onClick={handleAvatarClick} sx={{ ml: 2 }}>
                 <Avatar
-                  src={user.profile_picture || ""}
+                  src={user.profilePicture || ""}
                   alt={user.name}
                   sx={{ width: 36, height: 36, cursor: "pointer" }}
                 />

@@ -5,7 +5,7 @@ export interface UserProfile {
     id: string;
     name: string;
     email?: string;
-    profile_picture?: string;
+    profilePicture?: string;
     provider: 'google' | 'facebook';
 }
 
@@ -25,7 +25,7 @@ function loadUser(): UserProfile {
         id: "",
         name: "",
         email: undefined,
-        profile_picture: undefined,
+        profilePicture: undefined,
         provider: "google"
     };
 }

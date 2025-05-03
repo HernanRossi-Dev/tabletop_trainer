@@ -1,7 +1,26 @@
 import { createStore } from "solid-js/store";
-import { Battle } from "../types/battle_type";
+import { Battle, defaultArmyDetails, defaultBattleLog } from "../types/BattleType";
 
 const LOCAL_STORAGE_KEY = "battle";
+
+function defaultBattle(): Battle {
+  return {
+    id: "",
+    battleName: "",
+    userId: "",
+    height: "",
+    width: "",
+    armyTurn: "",
+    battleRound: 0,
+    playerArmy: defaultArmyDetails(),
+    opponentArmy: defaultArmyDetails(),
+    playerScore: 0,
+    opponentScore: 0,
+    timestamp: "",
+    archived: false,
+    battleLog: defaultBattleLog(),
+  };
+}
 
 function loadBattle(): Battle {
   const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -11,22 +30,7 @@ function loadBattle(): Battle {
     } catch {}
   }
   // Provide a default empty Battle object
-  return {
-    id: "",
-    battle_name: "",
-    user_id: "",
-    height: "",
-    width: "",
-    army_turn: "",
-    battle_round: "0",
-    player_army: "",
-    opponent_army: "",
-    player_score: "0",
-    opponent_score: "0",
-    timestamp: "",
-    archived: false,
-    battle_log: "{}",
-  };
+  return defaultBattle();
 }
 
 export const [activeBattle, setBattle] = createStore<Battle>(loadBattle());
@@ -48,22 +52,7 @@ export function replaceBattle(newBattle: Battle) {
 }
 
 export function clearBattle() {
-  const emptyBattle: Battle = {
-    id: "",
-    battle_name: "",
-    user_id: "",
-    height: "",
-    width: "",
-    army_turn: "",
-    battle_round: "",
-    player_army: "",
-    opponent_army: "",
-    player_score: "0",
-    opponent_score: "0",
-    timestamp: "",
-    archived: false,
-    battle_log: "{}",
-  };
+  const emptyBattle: Battle = defaultBattle();
   setBattle(emptyBattle);
   persistBattle(emptyBattle);
 }

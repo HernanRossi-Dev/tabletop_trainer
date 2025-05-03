@@ -1,7 +1,7 @@
-import { createSignal, For} from 'solid-js';
+import { createSignal, For } from 'solid-js';
 import { WARHAMMER_40K_FACTIONS } from '../config/factions';
 import styles from './GameSetupPage.module.css';
-import { user } from '../store/user_store';
+import { user } from '../store/UserStore';
 import {
   Typography,
 } from "@suid/material";
@@ -10,14 +10,14 @@ import Box from "@suid/material/Box";
 import Button from "@suid/material/Button";
 import CheckCircleIcon from "@suid/icons-material/CheckCircle";
 import { useNavigate } from "@solidjs/router";
-
+import { parseArmyList } from "../modules/ArmyListParser";
 
 let nextArmyId = 0;
-const createNewArmy = () => ({
+const createNewArmy = (team) => ({
   id: nextArmyId++,
   faction: "",
-  team: 1,
-  details: "", // New field for army details
+  team,
+  details: "",
 });
 
 function GameSetupPage() {
@@ -26,61 +26,44 @@ function GameSetupPage() {
   const [editingArmyId, setEditingArmyId] = createSignal(null);
   const [armyDetailsDraft, setArmyDetailsDraft] = createSignal("");
 
-  const [playAreaWidth, setPlayAreaWidth] = createSignal(44);
-  const [playAreaHeight, setPlayAreaHeight] = createSignal(30);
+  const [playAreaWidth, setPlayAreaWidth] = createSignal(60);
+  const [playAreaHeight, setPlayAreaHeight] = createSignal(44);
   const [battleName, setBattleName] = createSignal('');
 
-  // Armies
-  const [armies, setArmies] = createSignal([createNewArmy(), createNewArmy()]); // Start with Player vs AI
-
-  // Min/Max armies (adjust as needed)
-  const MIN_ARMIES = 2;
-  const MAX_ARMIES = 4; // Example limit
-
-  // --- Computed Values (derived signals) ---
-  const numberOfArmies = () => armies().length;
-  const canAddArmy = () => numberOfArmies() < MAX_ARMIES;
-  const canRemoveArmy = () => numberOfArmies() > MIN_ARMIES;
+  // Only two armies: player and opponent
+  const [playerArmy, setPlayerArmy] = createSignal(createNewArmy(1));
+  const [opponentArmy, setOpponentArmy] = createSignal(createNewArmy(2));
 
   // --- Event Handlers ---
 
-  const openArmyDetailsModal = (army) => {
+  const openArmyDetailsModal = (army, setArmy) => {
     setEditingArmyId(army.id);
     setArmyDetailsDraft(army.details || "");
     setModalOpen(true);
+    // Save which setter to use after modal closes
+    GameSetupPage._setArmyDetails = setArmy;
   };
+
   const saveArmyDetails = () => {
-    updateArmyConfig(editingArmyId(), "details", armyDetailsDraft());
+    const parsedArmyDetails = parseArmyList(armyDetailsDraft());
+    console.log("Parsed Army Details:", parsedArmyDetails);
+    // Update the correct army
+    GameSetupPage._setArmyDetails(army => ({ ...army, details: parsedArmyDetails }));
     setModalOpen(false);
   };
-  const addArmy = () => {
-    if (canAddArmy()) {
-      setArmies([...armies(), createNewArmy()]);
-    }
-  };
 
-  const removeArmy = () => {
-    if (canRemoveArmy()) {
-      setArmies(armies().slice(0, -1));
-    }
-  };
-
-  const updateArmyConfig = (id, field, value) => {
-    setArmies(prevArmies =>
-      prevArmies.map(army =>
-        army.id === id ? { ...army, [field]: value } : army
-      )
-    );
+  const updateArmyConfig = (setArmy, field, value) => {
+    setArmy(army => ({ ...army, [field]: value }));
   };
 
   const handleCreateBattle = async () => {
-    if (armies().some(army => !army.faction)) {
-       alert("Please select a faction for every army.");
-       return;
+    if (!playerArmy().faction || !opponentArmy().faction) {
+      alert("Please select a faction for both armies.");
+      return;
     }
-     if (playAreaWidth() <= 0 || playAreaHeight() <= 0) {
-       alert("Please enter valid play area dimensions.");
-       return;
+    if (playAreaWidth() <= 0 || playAreaHeight() <= 0) {
+      alert("Please enter valid play area dimensions.");
+      return;
     }
 
     const gameSettings = {
@@ -89,13 +72,12 @@ function GameSetupPage() {
         height: playAreaHeight(),
       },
       userId: user.id,
-      playerArmy: armies()[0],
-      opponentArmy: armies()[1],
+      playerArmy: playerArmy(),
+      opponentArmy: opponentArmy(),
       battleName: battleName(),
-      battleName: battleName(),
-      army_turn: 'TBD',
-      player_score: 0,
-      opponent_score: 0,
+      armyTurn: 'TBD',
+      playerScore: 0,
+      opponentScore: 0,
     };
 
     try {
@@ -107,7 +89,7 @@ function GameSetupPage() {
         },
         body: JSON.stringify(gameSettings),
       });
-  
+
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
       }
@@ -124,55 +106,45 @@ function GameSetupPage() {
   return (
     <div class={styles.setupContainer}>
       <Typography
-            variant="h6"
-            component="div"
-            sx={{
-              fontWeight: 700,
-              fontFamily: '"Share Tech Mono", "Orbitron", "Audiowide", "Roboto Mono", monospace',
-              mr: 2,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              pb: 2,
-              color: 'black'
-            }}
-          >
-            Battle Command AI - Game Setup
-          </Typography>
+        variant="h6"
+        component="div"
+        sx={{
+          fontWeight: 700,
+          fontFamily: '"Share Tech Mono", "Orbitron", "Audiowide", "Roboto Mono", monospace',
+          mr: 2,
+          letterSpacing: 2,
+          textTransform: "uppercase",
+          pb: 2,
+          color: 'black'
+        }}
+      >
+        Battle Command AI - Game Setup
+      </Typography>
 
-        <fieldset class={styles.fieldset}>
+      <fieldset class={styles.fieldset}>
         <legend style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Battle Details</legend>
-         <label
+        <label
           for="battleInput"
           class={styles.nowrapLabel}
           style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}
         >
           Battle Name:
-        </label>   
-          <input
-            id="battleInput"
-            type="string"
-            value={battleName()}
-            onInput={(e) => setBattleName(e.currentTarget.value)}
-            class={styles.textInput}
-            placeholder="Default Battle"
-          />   
+        </label>
+        <input
+          id="battleInput"
+          type="string"
+          value={battleName()}
+          onInput={(e) => setBattleName(e.currentTarget.value)}
+          class={styles.textInput}
+          placeholder="Default Battle"
+        />
       </fieldset>
 
       {/* --- Play Area Section --- */}
       <fieldset class={styles.fieldset}>
         <legend style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Play Area (Inches)</legend>
         <div class={styles.inputGroup}>
-
-          <label for="widthInput" style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Width:</label>      
-          <input
-            id="widthInput"
-            type="number"
-            min="1"
-            value={playAreaWidth()}
-            onInput={(e) => setPlayAreaWidth(parseInt(e.currentTarget.value, 10) || 0)}
-            class={styles.numberInput}
-          />
-          <label for="heightInput" style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Height:</label>
+          <label for="heightInput" style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Length:</label>
           <input
             id="heightInput"
             type="number"
@@ -181,89 +153,116 @@ function GameSetupPage() {
             onInput={(e) => setPlayAreaHeight(parseInt(e.currentTarget.value, 10) || 0)}
             class={styles.numberInput}
           />
+          <label for="widthInput" style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>Width:</label>
+          <input
+            id="widthInput"
+            type="number"
+            min="1"
+            value={playAreaWidth()}
+            onInput={(e) => setPlayAreaWidth(parseInt(e.currentTarget.value, 10) || 0)}
+            class={styles.numberInput}
+          />
         </div>
       </fieldset>
 
       {/* --- Armies Section --- */}
       <fieldset class={styles.fieldset}>
-        <legend style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>
+        <legend style={{ fontFamily: "Orbitron, Arial, sans-serif", color: "#4a5a8a" }}>
           Armies
-          {/* Armies ({numberOfArmies()}) */}
         </legend>
-        <div class={styles.armyControl}>
-          {/* <button onClick={addArmy} disabled={!canAddArmy()} class={styles.button}>
-            Add Army (+)
-          </button>
-          <button onClick={removeArmy} disabled={!canRemoveArmy()} class={styles.button}>
-            Remove Army (-)
-          </button> */}
-        </div>
 
-        <For each={armies()}>
-          {(army, index) => (
-            <fieldset class={styles.armyConfig}>
-              <legend style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>
-                Army {index() + 1} {index() === 0 ? "(Player)" : "(AI)"}
-              </legend>
+        {/* Player Army */}
+        <fieldset class={styles.armyConfig}>
+          <legend style={{ fontFamily: "Orbitron, Arial, sans-serif", color: "#4a5a8a" }}>
+            Army 1 (Player)
+          </legend>
+          <div class={styles.inputGroup}>
+            <label for="factionSelect-player" style={{ fontFamily: "Orbitron, Arial, sans-serif", color: "#4a5a8a" }}>
+              Faction:
+            </label>
+            <select
+              id="factionSelect-player"
+              value={playerArmy().faction}
+              onChange={e => updateArmyConfig(setPlayerArmy, 'faction', e.currentTarget.value)}
+              class={styles.selectInput}
+              required
+            >
+              <option value="" disabled>-- Select Faction --</option>
+              <For each={WARHAMMER_40K_FACTIONS}>
+                {factionName => <option value={factionName}>{factionName}</option>}
+              </For>
+            </select>
+            <label for="armyFile-player" class={styles.uploadLabel}>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => openArmyDetailsModal(playerArmy(), setPlayerArmy)}
+                style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                {playerArmy().details
+                  ? <>
+                    <CheckCircleIcon sx={{ color: "#43a047", fontSize: "1.2em" }} />
+                    Edit Army Details
+                  </>
+                  : "Add Army Details"}
+              </Button>
+            </label>
+          </div>
+        </fieldset>
 
-              {/* Faction Selection */}
-              <div class={styles.inputGroup}>
-                <label for={`factionSelect-${army.id}`} style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>
-                  Faction:
-                </label>
-                <select
-                  id={`factionSelect-${army.id}`}
-                  value={army.faction}
-                  onChange={(e) => updateArmyConfig(army.id, 'faction', e.currentTarget.value)}
-                  class={styles.selectInput}
-                  required
-                >
-                  <option value="" disabled>-- Select Faction --</option>
-                  <For each={WARHAMMER_40K_FACTIONS}>
-                    {(factionName) => <option value={factionName}>{factionName}</option>}
-                  </For>
-                </select>
-                <label for={`armyFile-${army.id}`} class={styles.uploadLabel}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={() => openArmyDetailsModal(army)}
-                  style={{ marginTop: "0.5rem", "display": "flex", "alignItems": "center", "gap": "0.5rem" }}
-                >
-                  {army.details
-                    ? <>
-                        <CheckCircleIcon sx={{ color: "#43a047", fontSize: "1.2em" }} />
-                        Edit Army Details
-                      </>
-                    : "Add Army Details"}
-                </Button>
-                </label>
+        {/* Opponent Army */}
+        <fieldset class={styles.armyConfig}>
+          <legend style={{ fontFamily: "Orbitron, Arial, sans-serif", color: "#4a5a8a" }}>
+            Army 2 (Opponent)
+          </legend>
+          <div class={styles.inputGroup}>
+            <label for="factionSelect-opponent" style={{ fontFamily: "Orbitron, Arial, sans-serif", color: "#4a5a8a" }}>
+              Faction:
+            </label>
+            <select
+              id="factionSelect-opponent"
+              value={opponentArmy().faction}
+              onChange={e => updateArmyConfig(setOpponentArmy, 'faction', e.currentTarget.value)}
+              class={styles.selectInput}
+              required
+            >
+              <option value="" disabled>-- Select Faction --</option>
+              <For each={WARHAMMER_40K_FACTIONS}>
+                {factionName => <option value={factionName}>{factionName}</option>}
+              </For>
+            </select>
+            <label for="armyFile-opponent" class={styles.uploadLabel}>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => openArmyDetailsModal(opponentArmy(), setOpponentArmy)}
+                style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                {opponentArmy().details
+                  ? <>
+                    <CheckCircleIcon sx={{ color: "#43a047", fontSize: "1.2em" }} />
+                    Edit Army Details
+                  </>
+                  : "Add Army Details"}
+              </Button>
+            </label>
+          </div>
+          <Typography sx={{ fontFamily: '"Share Tech Mono", "Iceland", "Audiowide", "Roboto Mono", monospace' }}>
+            <div class={styles.battleDetails}>
+              <div class={styles.armyBlock}>
+                <span class={styles.armyTitle}>Army Name: <b>test</b></span>
+                <span class={styles.armyDetail}>Detachment: test</span>
               </div>
-
-              {/* Team Assignment */}
-              {/* <div class={styles.inputGroup}>
-                <label for={`teamInput-${army.id}`} style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#4a5a8a" }}>
-                  Team:
-                </label>
-                <input
-                  id={`teamInput-${army.id}`}
-                  type="number"
-                  min="1"
-                  value={army.team}
-                  onInput={(e) => updateArmyConfig(army.id, 'team', parseInt(e.currentTarget.value, 10) || 1)}
-                  class={styles.numberInput}
-                 />
-              </div> */}
-            </fieldset>
-          )}
-        </For>
+            </div>
+          </Typography>
+        </fieldset>
       </fieldset>
 
       {/* --- Start Game Button --- */}
       <button
         onClick={handleCreateBattle}
         class={styles.actionButton}
-        style={{ "fontFamily": "Orbitron, Arial, sans-serif", "color": "#fff", "backgroundColor": "#2e3a59" }}
+        style={{ fontFamily: "Orbitron, Arial, sans-serif", color: "#fff", backgroundColor: "#2e3a59" }}
       >
         Create Battle
       </button>
@@ -301,7 +300,6 @@ function GameSetupPage() {
         </Box>
       </Modal>
     </div>
-    
   );
 }
 
