@@ -25,10 +25,6 @@ function BattleDashboardPage() {
       clearBattle();
       return;
     }
-    if (activeBattle) {
-      console.log("Current battle already set. Skipping fetch.");
-      return;
-    }
     getBattleByUserId()
       .then(fetchedBattle => {
         if (!fetchedBattle) {

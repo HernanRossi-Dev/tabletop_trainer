@@ -1,4 +1,4 @@
-import { createSignal  } from "solid-js";
+import { createSignal } from "solid-js";
 import styles from "./ActiveBattle.module.css";
 import { activeBattle } from "../store/BattleStore";
 import Remove from "@suid/icons-material/Remove";
@@ -8,12 +8,14 @@ import {
     Typography,
 } from "@suid/material";
 import ChatView from "./ChatView";
+import DiceRollerModal from "../components/DiceRollerModal";
+import { Show } from "solid-js";
 
 export default function ActiveBattle() {
     const [round, setRound] = createSignal(Number(activeBattle.battleRound) || 1);
     const [playerScore, setplayerScore] = createSignal(Number(activeBattle.playerScore) || 0);
     const [opponentScore, setopponentScore] = createSignal(Number(activeBattle.opponentScore) || 0);
-
+    const [isModalOpen, setIsModalOpen] = createSignal(false);
 
     return (
         <div class={styles.container}>
@@ -58,24 +60,24 @@ export default function ActiveBattle() {
                     </Typography>
                 </div>
                 <div class={styles.battleDetails}>
-                    <Typography sx={{fontFamily: '"Share Tech Mono", "Iceland", "Audiowide", "Roboto Mono", monospace'}}>
+                    <Typography sx={{ fontFamily: '"Share Tech Mono", "Iceland", "Audiowide", "Roboto Mono", monospace' }}>
                         <div class={styles.battleDetails}>
                             <div class={styles.armyBlock}>
                                 <span class={styles.armyTitle}>Your Army: <b>{activeBattle.playerArmy.faction}</b></span>
                                 <span class={styles.armyDetail}>Detachment: {activeBattle.playerArmy.faction}</span>
-                                <span class={styles.armyDetail}>Score: 
-                                    <Button color="inherit" sx={{ paddingLeft: 0.5, paddingRight: 0.5, minWidth: 0.05 }} startIcon={<Remove />} onClick={() => setplayerScore(r => Math.max(0, r - 1))}></Button> 
+                                <span class={styles.armyDetail}>Score:
+                                    <Button color="inherit" sx={{ paddingLeft: 0.5, paddingRight: 0.5, minWidth: 0.05 }} startIcon={<Remove />} onClick={() => setplayerScore(r => Math.max(0, r - 1))}></Button>
                                     <span class={styles.armyScore}>{playerScore()}</span>
-                                    <Button color="inherit" sx={{ paddingLeft: 0.5, paddingRight: 0.5, minWidth: 0.05 }} startIcon={<Add />} onClick={() => setplayerScore(r => Math.min(100, r + 2))}>2</Button> 
+                                    <Button color="inherit" sx={{ paddingLeft: 0.5, paddingRight: 0.5, minWidth: 0.05 }} startIcon={<Add />} onClick={() => setplayerScore(r => Math.min(100, r + 2))}>2</Button>
                                 </span>
                             </div>
                             <div class={styles.armyBlock}>
                                 <span class={styles.armyTitle}>Opponent Army: <b>{activeBattle.opponentArmy.faction}</b></span>
                                 <span class={styles.armyDetail}>Detachment: {activeBattle.opponentArmy.faction}</span>
-                                <span class={styles.armyDetail}>Score: 
-                                    <Button sx={{paddingLeft: 1.5, paddingRight: 0.5, minWidth: 0.05 }} color="inherit" startIcon={<Remove />} onClick={() => setopponentScore(r => Math.max(0, r - 1))}></Button> 
+                                <span class={styles.armyDetail}>Score:
+                                    <Button sx={{ paddingLeft: 1.5, paddingRight: 0.5, minWidth: 0.05 }} color="inherit" startIcon={<Remove />} onClick={() => setopponentScore(r => Math.max(0, r - 1))}></Button>
                                     <span class={styles.armyScore}>{opponentScore()}</span>
-                                    <Button sx={{ paddingLeft: 0.5, paddingRight: 0.5, minWidth: 0.05 }} color="inherit" startIcon={<Add />} onClick={() => setopponentScore(r => Math.min(100, r + 2))}>2</Button> 
+                                    <Button sx={{ paddingLeft: 0.5, paddingRight: 0.5, minWidth: 0.05 }} color="inherit" startIcon={<Add />} onClick={() => setopponentScore(r => Math.min(100, r + 2))}>2</Button>
                                 </span>
                             </div>
                         </div>
@@ -94,8 +96,24 @@ export default function ActiveBattle() {
                 </div>
             </div>
             <div class={styles.rightPanel}>
-               <ChatView></ChatView>
+                <ChatView />
             </div>
+            <Show when={isModalOpen()}>
+                <DiceRollerModal
+                    isOpen={isModalOpen()}
+                    onClose={() => setIsModalOpen(false)}
+                    onRoll={(result) => {
+                        // Handle the result of the dice roll
+                        console.log("Dice rolled:", result);
+                    }}
+                    rollType={'To Hit'}
+                    numDice={20}
+                    target={4}
+                />
+            </Show>
+            <button onClick={() => setIsModalOpen(true)} style="position:absolute;top:1rem;right:1rem;z-index:20;">
+                Open 3D Dice Roller
+            </button>
         </div>
     );
 }

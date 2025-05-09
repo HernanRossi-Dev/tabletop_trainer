@@ -1,7 +1,7 @@
 import jwt
 from flask import request, jsonify
 
-from backend.parameters import JWT_SECRET, JWT_ALGORITHM
+from backend.src.parameters import JWT_SECRET, JWT_ALGORITHM
 
 
 def get_jwt_identity():

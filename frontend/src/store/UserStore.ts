@@ -48,3 +48,17 @@ export function replaceUser(newUser: UserProfile) {
     setUser(newUser);
     persistUser(newUser);
 }
+
+export function resetUser(){
+    const emptyUser: UserProfile = {
+        jwt: "",
+        id: "",
+        name: "",
+        email: undefined,
+        profilePicture: undefined,
+        provider: "google"
+    };
+    setUser(emptyUser);
+    persistUser(emptyUser);
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+}

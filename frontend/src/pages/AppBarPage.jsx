@@ -10,7 +10,7 @@ import {
   MenuItem,
   IconButton,
 } from "@suid/material";
-import { user, replaceUser } from '../store/UserStore';
+import { user, replaceUser, resetUser } from '../store/UserStore';
 import { createSignal } from "solid-js";
 
 export default function BasicAppBar() {
@@ -34,14 +34,7 @@ export default function BasicAppBar() {
 
   const handleLogout = () => {
     handleMenuClose();
-    replaceUser({
-      jwt: "",
-      id: "",
-      name: "",
-      email: undefined,
-      profilePicture: undefined,
-      provider: "google"
-    });
+    resetUser();
     window.location.href = "/";
   };
 

@@ -2,6 +2,7 @@ import { createSignal, onMount, Show } from 'solid-js';
 import styles from './LoginPage.module.css'; // For styling
 import { user, replaceUser, UserProfile } from "../store/UserStore";
 import { useNavigate } from '@solidjs/router';
+// import { isJwtExpired } from '../modules/Api';
 
 
 function loadScript(src: string, id: string): Promise<void> {
@@ -42,6 +43,10 @@ function LoginPage() {
 
   // --- SDK Initialization ---
   onMount(async () => {
+    // if (user.jwt && isJwtExpired(user.jwt)) {
+    //   handleLogout();
+    //   navigate("/login"); // or your login route
+    // }
     try {
       // Load Google SDK (New Google Identity Services)
       await loadScript('https://accounts.google.com/gsi/client', 'google-identity-services');
@@ -142,10 +147,10 @@ function LoginPage() {
       console.log("Post Auth Response:", postAuthData);
       const profile: UserProfile = {
         jwt: postAuthData.access_token,
-        id: postAuthData.user.userId,
+        id: postAuthData.user.user_id,
         name: postAuthData.user.name,
         email: postAuthData.user.email,
-        profilePicture: postAuthData.user.profilePicture,
+        profilePicture: postAuthData.user.profile_picture,
         provider: 'google'
       };
       replaceUser(profile);
@@ -228,10 +233,6 @@ function LoginPage() {
 
   // --- Logout Handler ---
   const handleLogout = () => {
-     // TODO: Call your backend logout endpoint to invalidate the session/token.
-     // fetch('/api/auth/logout', { method: 'POST' });
-
-     // Clear local state
      replaceUser({
       jwt: "",
       id: "",
@@ -242,7 +243,7 @@ function LoginPage() {
   });
      setError(null);
      // Optional: Inform SDKs if needed
-     // google.accounts.id.disableAutoSelect(); // Prevent auto-login next time
+    //  google.accounts.id.disableAutoSelect(); // Prevent auto-login next time
      // FB.getLoginStatus(response => { if (response.status === 'connected') FB.logout(); });
      console.log("User logged out");
   }

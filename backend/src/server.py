@@ -6,7 +6,7 @@ import jwt
 from flask import request, jsonify, make_response, Response, stream_with_context
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
-from backend.helpers import get_jwt_identity, jwt_required
+from .helpers import jwt_required
 from backend.models.User import User
 from backend.models.Interaction import Interaction
 from backend.models.Battle import Battle
@@ -14,9 +14,9 @@ import sys
 import os
 from langchain_google_genai import ChatGoogleGenerativeAI
 from sqlalchemy import or_
-from backend.parameters import JWT_SECRET, JWT_ALGORITHM
+from .parameters import JWT_SECRET, JWT_ALGORITHM
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from backend.app import app, db
+from backend.src.app import app, db
 
 @app.after_request
 def handle_options_and_cors(response):
@@ -141,20 +141,20 @@ def update_user():
 @app.route('/api/battles', methods=['GET'])
 @jwt_required
 def fetch_battles(_context=None):
-    print(f"--- FETCH BATTLE ENDPOINT CALLED ---") # Debugging log
+    app.logger.info(f"--- FETCH BATTLE ENDPOINT CALLED ---") # Debugging log
     user_id = request.args.get('user_id')
     if not user_id:
         return jsonify({"error": "Missing user_id parameter"}), 400
     try:
-        print(f'Fetching battles for user: {user_id}') # Debugging log
+        app.logger.info(f'Fetching battles for user: {user_id}') # Debugging log
         battles = Battle.query.all()
         battles_list = [battle.to_dict() for battle in battles]
         users_battle = [b for b in battles_list if b['user_id'] == user_id]
         import json
-        print(json.dumps(users_battle)) 
+        app.logger.info(json.dumps(users_battle)) 
         return jsonify(users_battle), 200
     except Exception as e:
-        print(f"Error fetching battles: {e}")
+        app.logger.info(f"Error fetching battles: {e}")
         return jsonify({"error": "Failed to fetch battles"}), 500
 
 
@@ -166,7 +166,7 @@ def create_battle(_context=None):
     Creates a new Battles entity in the database.
     Expects JSON data like {'playArea': {'width': 44, 'height': 60}, 'playerArmy': 'Black Templars', 'opponentArmy': 'Tau'}
     """
-    print(f"--- CREATE BATTLE ENDPOINT CALLED ---") # Debugging log
+    app.logger.info(f"--- CREATE BATTLE ENDPOINT CALLED ---") # Debugging log
     if not request.is_json:
         return jsonify({"error": "Request must be JSON"}), 400
 
@@ -194,16 +194,18 @@ def create_battle(_context=None):
                         army_turn="0",
                         player_score="0",
                         opponent_score="0",
-                        timestamp=datetime.now()
+                        timestamp=datetime.now(),
+                        battle_log = {'index': 0},
+                        archived=False
                       )
     try:
         db.session.add(new_battle)
         db.session.commit()
-        print(f"Battle created: {new_battle}") # Server log
+        app.logger.info(f"Battle created: {new_battle}") # Server log
         return jsonify(new_battle.to_dict()), 201 # 201 Created status code
     except IntegrityError as e:
         db.session.rollback() # Important: Rollback session on error
-        print(f"Database Integrity Error: {e}")
+        app.logger.info(f"Database Integrity Error: {e}")
         # Check if it's a unique constraint violation (e.g., username or email exists)
         if "unique constraint" in str(e).lower():
              return jsonify({"error": "Username or Email already exists"}), 409 # 409 Conflict
@@ -211,7 +213,7 @@ def create_battle(_context=None):
              return jsonify({"error": "Database error creating user"}), 500
     except Exception as e:
         db.session.rollback()
-        print(f"Error creating user: {e}")
+        app.logger.info(f"Error creating user: {e}")
         return jsonify({"error": "An unexpected error occurred"}), 500
 
 
@@ -223,20 +225,20 @@ def post_text_interaction_stream(_context=None):
     Handles text input, calls LLM (Gemini), logs interaction.
     Expects JSON like {'user_id': 'some_uuid', 'text': 'Users message'}
     """
-    print(f"--- POST TEXT INTERACTION STREAM ENDPOINT CALLED --- {request.get_json()}") # Debugging log
+    app.logger.info(f"--- POST TEXT INTERACTION STREAM ENDPOINT CALLED --- {request.get_json()}") # Debugging log
     data = request.get_json()
     user_id_str = data.get('user_id')
     user_text = data.get('text')
 
     if not user_id_str or not user_text:
-        print(f"--- not populated") # Debugging log
+        app.logger.info(f"--- not populated") # Debugging log
         return jsonify({"error": "Missing 'user_id' or 'text' in request body"}), 400
 
     try:
         user_id = uuid.UUID(user_id_str)
     except ValueError:
         return jsonify({"error": "Invalid user_id format"}), 400
-    print(f"--- user_id: {user_id} ---") # Debugging log
+    app.logger.info(f"--- user_id: {user_id} ---") # Debugging log
     # Verify user exists
     user = db.session.get(User, user_id)
     if user is None:
@@ -250,9 +252,9 @@ def post_text_interaction_stream(_context=None):
         )
         llm_response = llm.invoke(user_text)
         llm_response_text = getattr(llm_response, "content", str(llm_response))
-        print(f"--- LLM Response: {llm_response_text} ---") # Debugging log
+        app.logger.info(f"--- LLM Response: {llm_response_text} ---") # Debugging log
     except Exception as e:
-        print(f"Error calling Gemini API: {e}")
+        app.logger.info(f"Error calling Gemini API: {e}")
         return jsonify({"error": "Failed to call Gemini API", "details": str(e)}), 500
 
     # Create Interaction log entry
@@ -266,7 +268,7 @@ def post_text_interaction_stream(_context=None):
     try:
         db.session.add(new_interaction)
         db.session.commit()
-        print(f"Text interaction for user {user_id} logged.") # Server log
+        app.logger.info(f"Text interaction for user {user_id} logged.") # Server log
         return jsonify({
             "message": "Text interaction processed successfully",
             "llm_response": llm_response_text,
@@ -274,7 +276,7 @@ def post_text_interaction_stream(_context=None):
         }), 200
     except Exception as e:
         db.session.rollback()
-        print(f"Error logging text interaction: {e}")
+        app.logger.info(f"Error logging text interaction: {e}")
         return jsonify({"error": "An unexpected error occurred logging interaction"}), 500
 
 
@@ -326,7 +328,7 @@ def post_text_interaction():
     try:
         db.session.add(new_interaction)
         db.session.commit()
-        print(f"Text interaction for user {user_id} logged.") # Server log
+        app.logger.info(f"Text interaction for user {user_id} logged.") # Server log
         return jsonify({
             "message": "Text interaction processed successfully",
             "llm_response": llm_response_text,
@@ -334,7 +336,7 @@ def post_text_interaction():
         }), 200
     except Exception as e:
         db.session.rollback()
-        print(f"Error logging text interaction: {e}")
+        app.logger.info(f"Error logging text interaction: {e}")
         return jsonify({"error": "An unexpected error occurred logging interaction"}), 500
 
 
@@ -375,10 +377,10 @@ def post_image_interaction():
     # try:
     #     file.save(upload_path)
     # except Exception as e:
-    #     print(f"Error saving file: {e}")
+    #     app.logger.info(f"Error saving file: {e}")
     #     return jsonify({"error": "Could not save uploaded file"}), 500
     filename = file.filename # Using original filename for simplicity here
-    print(f"Received image file: {filename}") # Server log - ADD ACTUAL SAVING LOGIC
+    app.logger.info(f"Received image file: {filename}") # Server log - ADD ACTUAL SAVING LOGIC
 
     # --- Placeholder for your Image Processing/LLM Logic ---
     # 1. Process the saved image (e.g., analysis, description generation)
@@ -399,7 +401,7 @@ def post_image_interaction():
     try:
         db.session.add(new_interaction)
         db.session.commit()
-        print(f"Image interaction for user {user_id} logged.") # Server log
+        app.logger.info(f"Image interaction for user {user_id} logged.") # Server log
         return jsonify({
             "message": "Image interaction processed successfully",
             "filename": filename,
@@ -408,7 +410,7 @@ def post_image_interaction():
         }), 200
     except Exception as e:
         db.session.rollback()
-        print(f"Error logging image interaction: {e}")
+        app.logger.info(f"Error logging image interaction: {e}")
         return jsonify({"error": "An unexpected error occurred logging interaction"}), 500
 
 

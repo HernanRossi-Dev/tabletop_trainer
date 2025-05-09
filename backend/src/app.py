@@ -1,5 +1,4 @@
 import logging
-from sqlalchemy.exc import IntegrityError
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -23,6 +22,7 @@ console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(formatter)
 app.logger.addHandler(console_handler)
 
+
 db_url = os.getenv('DATABASE_URL')
 if not db_url:
     raise ValueError("No DATABASE_URL set for Flask application. Please set it in .env file.")
@@ -40,7 +40,7 @@ def init_db_command():
     from backend.models.Battle import Battle
 
     with app.app_context():
-        # db.drop_all()
+        db.drop_all()
         print("Run create all")
         db.create_all()
     print("Initialized the database.")

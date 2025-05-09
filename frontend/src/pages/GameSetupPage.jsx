@@ -1,5 +1,6 @@
 import { createSignal, For } from 'solid-js';
 import { WARHAMMER_40K_FACTIONS } from '../config/factions';
+import {createBattle} from '../modules/Api';
 import styles from './GameSetupPage.module.css';
 import { user } from '../store/UserStore';
 import {
@@ -23,31 +24,25 @@ const createNewArmy = (team) => ({
 function GameSetupPage() {
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = createSignal(false);
-  const [editingArmyId, setEditingArmyId] = createSignal(null);
   const [armyDetailsDraft, setArmyDetailsDraft] = createSignal("");
 
   const [playAreaWidth, setPlayAreaWidth] = createSignal(60);
   const [playAreaHeight, setPlayAreaHeight] = createSignal(44);
   const [battleName, setBattleName] = createSignal('');
 
-  // Only two armies: player and opponent
   const [playerArmy, setPlayerArmy] = createSignal(createNewArmy(1));
   const [opponentArmy, setOpponentArmy] = createSignal(createNewArmy(2));
 
-  // --- Event Handlers ---
 
   const openArmyDetailsModal = (army, setArmy) => {
-    setEditingArmyId(army.id);
     setArmyDetailsDraft(army.details || "");
     setModalOpen(true);
-    // Save which setter to use after modal closes
     GameSetupPage._setArmyDetails = setArmy;
   };
 
   const saveArmyDetails = () => {
     const parsedArmyDetails = parseArmyList(armyDetailsDraft());
     console.log("Parsed Army Details:", parsedArmyDetails);
-    // Update the correct army
     GameSetupPage._setArmyDetails(army => ({ ...army, details: parsedArmyDetails }));
     setModalOpen(false);
   };
@@ -65,7 +60,6 @@ function GameSetupPage() {
       alert("Please enter valid play area dimensions.");
       return;
     }
-
     const gameSettings = {
       playArea: {
         width: playAreaWidth(),
@@ -78,25 +72,14 @@ function GameSetupPage() {
       armyTurn: 'TBD',
       playerScore: 0,
       opponentScore: 0,
+      battleLog: "",
     };
-
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/battles', {
-        method: 'POST',
-        headers: {
-          "Authorization": `Bearer ${user.jwt}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(gameSettings),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+      const gameData = await createBattle(gameSettings);
+      if (gameData) {
+        console.log("Battle created:", gameData);
+        navigate('/battles')
       }
-
-      const data = await response.json();
-      console.log("Battle created:", data);
-      navigate('/battles')
     } catch (error) {
       console.error("Failed to create battle:", error);
       alert("Failed to create battle. See console for details.");
@@ -208,6 +191,15 @@ function GameSetupPage() {
               </Button>
             </label>
           </div>
+          <Typography sx={{ fontFamily: '"Share Tech Mono", "Iceland", "Audiowide", "Roboto Mono", monospace', textAlign: "center"}}>
+            <div class={styles.battleDetails}>
+              <div class={styles.armyBlock}>
+                <span class={styles.armyTitle}>Army Name: {playerArmy().details.armyName}<br/></span>
+                <span class={styles.armyDetail}>Detachment: {playerArmy().details.detachment}<br/></span>
+                <span class={styles.armyDetail}>Size: {playerArmy().details.armySizePoints}</span>
+              </div>
+            </div>
+          </Typography>
         </fieldset>
 
         {/* Opponent Army */}
@@ -247,11 +239,12 @@ function GameSetupPage() {
               </Button>
             </label>
           </div>
-          <Typography sx={{ fontFamily: '"Share Tech Mono", "Iceland", "Audiowide", "Roboto Mono", monospace' }}>
+          <Typography sx={{ fontFamily: '"Share Tech Mono", "Iceland", "Audiowide", "Roboto Mono", monospace', textAlign: "center"}}>
             <div class={styles.battleDetails}>
               <div class={styles.armyBlock}>
-                <span class={styles.armyTitle}>Army Name: <b>test</b></span>
-                <span class={styles.armyDetail}>Detachment: test</span>
+                <span class={styles.armyTitle}>Army Name: {opponentArmy().details.armyName}<br/></span>
+                <span class={styles.armyDetail}>Detachment: {opponentArmy().details.detachment}<br/></span>
+                <span class={styles.armyDetail}>Size: {opponentArmy().details.armySizePoints}</span>
               </div>
             </div>
           </Typography>
