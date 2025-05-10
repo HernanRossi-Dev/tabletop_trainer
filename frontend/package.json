@@ -14,8 +14,15 @@
     "@suid/material": "^0.18.0",
     "@suid/vite-plugin": "^0.3.1",
     "cannon-es": "^0.20.0",
+    "eventemitter3": "^5.0.1",
+    "sass": "^1.87.0",
     "solid-js": "^1.9.5",
-    "three": "^0.176.0"
+    "three": "^0.176.0",
+    "vega": "^6.1.2",
+    "vega-embed": "^7.0.2",
+    "vega-lite": "^6.1.0",
+    "web-vitals": "^5.0.0",
+    "zustand": "^5.0.4"
   },
   "devDependencies": {
     "@types/three": "^0.176.0",
