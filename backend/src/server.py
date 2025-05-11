@@ -6,7 +6,7 @@ import jwt
 from flask import request, jsonify, make_response, Response, stream_with_context
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
-from .helpers import jwt_required
+from .helpers import get_battle_armies, jwt_required, read_rules_file
 from backend.models.User import User
 from backend.models.Interaction import Interaction
 from backend.models.Battle import Battle
@@ -228,6 +228,7 @@ def post_text_interaction_stream(_context=None):
     app.logger.info(f"--- POST TEXT INTERACTION STREAM ENDPOINT CALLED --- {request.get_json()}") # Debugging log
     data = request.get_json()
     user_id_str = data.get('user_id')
+    battle_id_str = data.get('battle_id')
     user_text = data.get('text')
 
     if not user_id_str or not user_text:
@@ -246,11 +247,25 @@ def post_text_interaction_stream(_context=None):
 
     # --- LangChain Gemini LLM Logic ---
     try:
+        battle_armies = get_battle_armies(battle_id_str)
+        app.logger.info(f"--- battle_armies: {battle_armies} ---") # Debugging log
         llm = ChatGoogleGenerativeAI(
             model="models/gemini-2.0-flash",
             google_api_key=os.environ["GOOGLEAI_API_KEY"]
         )
-        llm_response = llm.invoke(user_text)
+        system_instructions =  """*****Your Instructions********
+You are an AI Oppenent for a Player who wants to play a practive game of Warhammer 40K. YOu are an expert of the latest rules for all factions and detachments of 40K. You will speak to your oppenent as an experienced commander in the 40K universe. 
+"""
+        system_instructions += f"Your Opponent is playing {battle_armies['player_army']} and you are playing {battle_armies['opponent_army']}.\n"
+        
+        full_rules = read_rules_file()
+        system_instructions += f"Here are the rules for the game: {full_rules}\n"
+        messages = [
+            ("system", system_instructions),
+            ("human", user_text),
+        ]
+        app.logger.info(f"--- LLM Messages: {messages} ---") # Debugging log
+        llm_response = llm.invoke(messages)
         llm_response_text = getattr(llm_response, "content", str(llm_response))
         app.logger.info(f"--- LLM Response: {llm_response_text} ---") # Debugging log
     except Exception as e:
