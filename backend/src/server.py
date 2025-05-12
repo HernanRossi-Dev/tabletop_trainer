@@ -229,6 +229,7 @@ def post_text_interaction_stream(_context=None):
     data = request.get_json()
     user_id_str = data.get('user_id')
     battle_id_str = data.get('battle_id')
+    battle_log_str = data.get('battle_log')
     user_text = data.get('text')
 
     if not user_id_str or not user_text:
@@ -240,7 +241,6 @@ def post_text_interaction_stream(_context=None):
     except ValueError:
         return jsonify({"error": "Invalid user_id format"}), 400
     app.logger.info(f"--- user_id: {user_id} ---") # Debugging log
-    # Verify user exists
     user = db.session.get(User, user_id)
     if user is None:
         return jsonify({"error": "Users not found"}), 404
@@ -257,6 +257,7 @@ def post_text_interaction_stream(_context=None):
 You are an AI Oppenent for a Player who wants to play a practive game of Warhammer 40K. YOu are an expert of the latest rules for all factions and detachments of 40K. You will speak to your oppenent as an experienced commander in the 40K universe. 
 """
         system_instructions += f"Your Opponent is playing {battle_armies['player_army']} and you are playing {battle_armies['opponent_army']}.\n"
+        system_instructions += f"************** Here is the current history of the battle messages: {battle_log_str}.\n"
         
         full_rules = read_rules_file()
         system_instructions += f"Here are the rules for the game: {full_rules}\n"

@@ -1,4 +1,4 @@
-import { createSignal, For } from "solid-js";
+import { createSignal, For, onCleanup, onMount, createEffect, createMemo } from "solid-js";
 import styles from "./ActiveBattle.module.css";
 import { activeBattle, clearBattle, replaceBattle, updateBattle } from "../store/BattleStore";
 import { user  } from "../store/UserStore";
@@ -11,42 +11,48 @@ export default function ChatView() {
     const [messages, setMessages] = createSignal([]);
     const [input, setInput] = createSignal("");
     const [recording, setRecording] = createSignal(false);
-   
-    function getNextMessageNumber(battle_log) {
-        const keys = Object.keys(battle_log || {});
+    let chatViewRef;
+
+    const messageCount = createMemo(() => messages().length);
+
+    // Auto-scroll to bottom when the number of messages changes
+    createEffect(() => {
+        messageCount(); // depend only on the count
+        if (chatViewRef) {
+            chatViewRef.scrollTop = chatViewRef.scrollHeight;
+        }
+    });
+
+    function getNextMessageNumber(battleLog) {
+        const keys = Object.keys(battleLog || {});
         if (keys.length === 0) return 1;
         return Math.max(...keys.map(Number)) + 1;
     }
 
-    function setNextMesage(message) {
-        const battle_log = activeBattle.battle_log || {};
-        const nextMsgNum = getNextMessageNumber(battle_log);
+    function updateBattleLog(message, creator) {
+        const battleLog = activeBattle.battleLog || {};
+        const nextMsgNum = getNextMessageNumber(battleLog);
         const updatedLog = {
-            ...battle_log,
-            [nextMsgNum]: { message: input(), creator: "user" }
+            ...battleLog,
+            [nextMsgNum]: { message, creator }
         };
-        updateBattle({ battle_log: JSON.stringify(updatedLog) });
+        updateBattle({ battleLog: updatedLog });
+        console.log("battleLog:", JSON.stringify(battleLog, null, 2));
     }
 
-    // Placeholder: handle sending a chat message
     const handleSend = () => {
         var text_input = input().trim();
         console.log("Sending message:", text_input);
-        const battle_log = activeBattle.battle_log || {};
         if (text_input) {
-            setMessages([...messages(), { sender: "user", text: text_input}]);
+            setMessages(msgs => [...msgs, { sender: "user", text: text_input }]);
+            updateBattleLog(text_input, "user");
             setInput("");
-
-            console.log("battle_log:", battle_log);
-            if (!battle_log && !Object.keys(battle_log).length > 0) {
-                const init_message = `Introduce yourself to the Oppenent, you are the Battle Commander AI. You are an exper Warhammer 40K player. You are commanding the ${activeBattle.opponent_army.faction}`;
-                text_input = `${text_input}. ${init_message}` ;
-            }
+            
             const userId = user.id;
             fetch('http://127.0.0.1:5000/api/interactions/text/stream', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization':  `Bearer ${user.jwt}` },
-                body: JSON.stringify({ 'user_id': user.id, "text": text_input, "battle_id": activeBattle.id })
+                body: JSON.stringify({ 'user_id': user.id, "text": text_input, "battle_id": activeBattle.id, "battle_log": JSON.stringify(activeBattle.battleLog, null, 2) })
             })
             .then(response => response.json())
             .then(data => {
@@ -55,13 +61,13 @@ export default function ChatView() {
                         ...msgs,
                         { sender: "ai", text: data.llm_response }
                     ]);
-                    setNextMesage(data.llm_response);
+                    updateBattleLog(data.llm_response , "agent");
                 }
             })
             .catch(err => {
                 setMessages(msgs => [
                     ...msgs,
-                    { sender: "ai", text: "Error: Could not get response from AI." }
+                    { sender: "agent", text: "Error: Could not get response from agent." }
                 ]);
             });   
         }
@@ -72,7 +78,7 @@ export default function ChatView() {
         const file = e.target.files[0];
         if (file) {
             // TODO: send file to backend
-            setMessages([...messages(), { sender: "user", text: `Uploaded file: ${file.name}` }]);
+            setMessages(msgs => [...msgs, { sender: "user", text: `Uploaded file: ${file.name}` }]);
         }
     };
 
@@ -81,7 +87,7 @@ export default function ChatView() {
         const file = e.target.files[0];
         if (file) {
             // TODO: send video to backend
-            setMessages([...messages(), { sender: "user", text: `Uploaded video: ${file.name}` }]);
+            setMessages(msgs => [...msgs, { sender: "user", text: `Uploaded video: ${file.name}` }]);
         }
     };
 
@@ -90,7 +96,7 @@ export default function ChatView() {
         setRecording(!recording());
         // TODO: implement audio recording and send to backend
         if (!recording()) {
-            setMessages([...messages(), { sender: "user", text: "Audio recording sent." }]);
+            setMessages(msgs => [...msgs, { sender: "user", text: "Audio recording sent." }]);
         }
     };
 
@@ -101,21 +107,17 @@ export default function ChatView() {
                     sx={{
                         fontWeight: 700,
                         fontFamily: '"Share Tech Mono", "Iceland", "Audiowide", "Roboto Mono", monospace',
-                        // mr: 2,
+                        /* mr: 2, */
                         letterSpacing: 2,
                         mt:-3
                     }}
                 >
-                    Command AI
+                    Commander
                 </Typography>
-                <div class={styles.chatView}>
-                    {/* <For each={messages()}>
-                        {msg => (
-                            <div class={msg.sender === "user" ? styles.userMsg : styles.aiMsg}>
-                                {msg.text}
-                            </div>
-                        )}
-                    </For> */}
+                <div
+                    class={styles.chatView}
+                    ref={el => (chatViewRef = el)}
+                >
                     <For each={messages()}>
                         {msg => (
                             <ChatBubble text={msg.text} sender={msg.sender} />
