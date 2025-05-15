@@ -52,22 +52,22 @@ export default function ChatView() {
             fetch('http://127.0.0.1:5000/api/interactions/text/stream', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization':  `Bearer ${user.jwt}` },
-                body: JSON.stringify({ 'user_id': user.id, "text": text_input, "battle_id": activeBattle.id, "battle_log": JSON.stringify(activeBattle.battleLog, null, 2) })
+                body: JSON.stringify({ 'user_id': user.id, "text": text_input, "battle_id": activeBattle.id })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.llm_response) {
                     setMessages(msgs => [
                         ...msgs,
-                        { sender: "ai", text: data.llm_response }
+                        { sender: "model", text: data.llm_response }
                     ]);
-                    updateBattleLog(data.llm_response , "agent");
+                    updateBattleLog(data.llm_response , "model");
                 }
             })
             .catch(err => {
                 setMessages(msgs => [
                     ...msgs,
-                    { sender: "agent", text: "Error: Could not get response from agent." }
+                    { sender: "model", text: "Error: Could not get response from agent." }
                 ]);
             });   
         }
