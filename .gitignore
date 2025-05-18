@@ -14,6 +14,10 @@ backend/build/
 backend/dist/
 backend/*.egg-info/
 
+# Ignore all .pyc files everywhere
+*.pyc
+**/*.pyc
+
 # Node frontend specifics
 frontend/node_modules
 frontend/dist # Usually built inside container, but good practice
@@ -30,6 +34,7 @@ Thumbs.db
 **/.env* # Ignore .env files in all directories
 
 __pycache__/
-**/__pycache__/
+backend/__pycache__
+*/backend/src/__pycache__/*.pyc
 
 backend/instructions/
