@@ -1,4 +1,4 @@
-from app import app
+from backend.src.app import app
 
 
 @app.flask.cli.command("init-db")

@@ -55,7 +55,7 @@ class Battle(app.db.Model):
             "army_turn": self.army_turn,
             "player_score": self.player_score,
             "opponent_score": self.opponent_score,
-            "battle_log": self.battle_log,
+            "battle_log": json.dumps(self.opponent_army) if isinstance(self.opponent_army, dict) else self.opponent_army,
             "archived": self.archived, 
             "timestamp": self.timestamp.isoformat(),
         }
