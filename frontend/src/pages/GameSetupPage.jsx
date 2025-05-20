@@ -1,6 +1,6 @@
 import { createSignal, For } from 'solid-js';
 import { WARHAMMER_40K_FACTIONS } from '../config/factions';
-import {createBattle} from '../modules/Api';
+import {createBattle} from '../modules/api_module';
 import styles from './GameSetupPage.module.css';
 import { user } from '../store/UserStore';
 import {
@@ -11,7 +11,7 @@ import Box from "@suid/material/Box";
 import Button from "@suid/material/Button";
 import CheckCircleIcon from "@suid/icons-material/CheckCircle";
 import { useNavigate } from "@solidjs/router";
-import { parseArmyList } from "../modules/ArmyListParser";
+import { parseArmyList } from "../modules/army-list-parser";
 
 let nextArmyId = 0;
 const createNewArmy = (team) => ({

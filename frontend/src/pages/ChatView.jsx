@@ -1,8 +1,11 @@
-import { createSignal, For, onCleanup, onMount, createEffect, createMemo } from "solid-js";
+import { createSignal, For, createEffect, createMemo, onMount } from "solid-js";
 import styles from "./ActiveBattle.module.css";
 import { activeBattle, clearBattle, replaceBattle, updateBattle } from "../store/BattleStore";
 import { user  } from "../store/UserStore";
 import ChatBubble from "../components/ChatBubble";
+import { API_HOST } from "../config";
+import { loadOngoingBattle } from "../modules/battle-utils";
+
 import {
     Typography,
 } from "@suid/material";
@@ -15,29 +18,20 @@ export default function ChatView() {
 
     const messageCount = createMemo(() => messages().length);
 
-    // Auto-scroll to bottom when the number of messages changes
+    onMount(() => {
+        loadOngoingBattle();
+    });
+
     createEffect(() => {
-        messageCount(); // depend only on the count
+        messageCount();
         if (chatViewRef) {
             chatViewRef.scrollTop = chatViewRef.scrollHeight;
         }
     });
 
-    function getNextMessageNumber(battleLog) {
-        const keys = Object.keys(battleLog || {});
-        if (keys.length === 0) return 1;
-        return Math.max(...keys.map(Number)) + 1;
-    }
-
-    function updateBattleLog(message, creator) {
-        const battleLog = activeBattle.battleLog || {};
-        const nextMsgNum = getNextMessageNumber(battleLog);
-        const updatedLog = {
-            ...battleLog,
-            [nextMsgNum]: { message, creator }
-        };
-        updateBattle({ battleLog: updatedLog });
-        console.log("battleLog:", JSON.stringify(battleLog, null, 2));
+    function updateBattleLog(updatedBattleLog) {
+        console.log("Updated BattleLog:", JSON.stringify(updatedBattleLog, null, 2));
+        updateBattle({ battleLog: updatedBattleLog });
     }
 
     const handleSend = () => {
@@ -45,23 +39,25 @@ export default function ChatView() {
         console.log("Sending message:", text_input);
         if (text_input) {
             setMessages(msgs => [...msgs, { sender: "user", text: text_input }]);
-            updateBattleLog(text_input, "user");
             setInput("");
-            
-            const userId = user.id;
-            fetch('http://127.0.0.1:5000/api/interactions/text/stream', {
+            fetch(`${API_HOST}/api/interactions/text/stream`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization':  `Bearer ${user.jwt}` },
                 body: JSON.stringify({ 'user_id': user.id, "text": text_input, "battle_id": activeBattle.id })
             })
             .then(response => response.json())
             .then(data => {
-                if (data.llm_response) {
+                console.log("Received response from ai:", data);
+                if (data.battle_log) {
+                    const updatedBattleLog = data.battle_log;
+                    const keys = Object.keys(updatedBattleLog).map(Number);
+                    const lastKey = Math.max(...keys);
+                    const lastEntry = updatedBattleLog[lastKey];
                     setMessages(msgs => [
                         ...msgs,
-                        { sender: "model", text: data.llm_response }
+                        { sender: "ai", text: lastEntry.message }
                     ]);
-                    updateBattleLog(data.llm_response , "model");
+                    updateBattleLog(updatedBattleLog);
                 }
             })
             .catch(err => {

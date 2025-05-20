@@ -2,7 +2,8 @@ import json
 import uuid
 from datetime import datetime
 from backend.src.app import app
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB  # or JSON if not using Postgres
+from sqlalchemy.ext.mutable import MutableDict
 
 class Battle(app.db.Model):
     __tablename__ = 'battles'
@@ -21,7 +22,7 @@ class Battle(app.db.Model):
     opponent_score = app.db.Column(app.db.Text, nullable=True) # Store the points of the opponent
     archived = app.db.Column(app.db.Boolean, default=False) # Archive the battle
     timestamp = app.db.Column(app.db.DateTime, nullable=False, default=datetime.now(), index=True)
-    battle_log = app.db.Column(app.db.JSON, nullable=False)
+    battle_log = app.db.Column(MutableDict.as_mutable(JSONB), default=dict)
     """
     The battle log will contain all of the chat history the user had with the model this will be stored in Dict
     {   
@@ -55,7 +56,7 @@ class Battle(app.db.Model):
             "army_turn": self.army_turn,
             "player_score": self.player_score,
             "opponent_score": self.opponent_score,
-            "battle_log": json.dumps(self.opponent_army) if isinstance(self.opponent_army, dict) else self.opponent_army,
+            "battle_log": json.dumps(self.battle_log),
             "archived": self.archived, 
             "timestamp": self.timestamp.isoformat(),
         }

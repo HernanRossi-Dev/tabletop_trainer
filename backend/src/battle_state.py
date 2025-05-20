@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+from typing import Dict
 
 from flask import jsonify
 from backend.src.app import app
@@ -22,6 +23,13 @@ class BattleState:
         return self._battle.to_dict()
     
     @property
+    def battle_id(self):
+        """
+        Returns the battle ID
+        """
+        return str(self._battle.id)
+    
+    @property
     def player_army(self):
         """
         Returns the player army details
@@ -42,22 +50,31 @@ class BattleState:
         """
         return self._battle.battle_log
     
-    def update_battle_log(self, message: str, creator: str):
-        """
-        Updates the battle log with a new message
-        """
-        if self.battle_log is None:
-            self.battle_log = {}
-        message_id = len(self.battle_log) + 1
+    @staticmethod
+    def stringify_keys(d):
+        return {str(k): v for k, v in d.items()}
 
-        log.info(f"Updating battle log for battle {self.battle_log} \n with message: {message=}, {message_id=}")
-
-        self.battle_log[message_id] = {
-            "creator": creator,
-            "message": message,
-            "timestamp": datetime.now().isoformat()
+    def update_battle_log(self, user_message: str, ai_response: str):
+        battle = db.session.get(Battle, self.battle_id)
+        if battle.battle_log is None:
+            battle.battle_log = {}
+        user_message_id = len(battle.battle_log)
+        ai_message_id = user_message_id + 1
+        interaction = {
+            user_message_id: {
+                "creator": 'user',
+                "message": user_message,
+                "timestamp": datetime.now().isoformat()
+            },
+            ai_message_id: {
+                "creator": 'ai',
+                "message": ai_response,
+                "timestamp": datetime.now().isoformat()
+            }
         }
+        battle.battle_log.update(interaction)
         db.session.commit()
+        return battle.battle_log
 
     @property
     def get_model_formated_battle_log(self):

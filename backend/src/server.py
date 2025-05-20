@@ -258,18 +258,21 @@ def post_text_interaction_stream(_context=None) -> Dict:
         return jsonify({"error": "Users not found"}), 404
 
     battle_state = BattleState(battle_id_str)
-    battle_state.update_battle_log(user_message, "user")
     try:
         response = client.generate(content=user_message, battle_state=battle_state)
         log.info(f"--- LLM Response: {response} ---")
+        updated_battle_log = battle_state.update_battle_log(user_message=user_message, ai_response=response)
     except Exception as e:
         log.error(f"Error calling Gemini API: {e}")
         return jsonify({"error": "Failed to call Gemini API", "details": str(e)}), 500
 
     log_interaction_task.delay(str(user_id), user_message, response, "text")
+    if not updated_battle_log:
+        return jsonify({"error": "Failed to update battle log"}), 500
+    # Return the updated battle log
     return jsonify({
         "message": "Text interaction processed successfully",
-        "llm_response": response
+        "battle_log": updated_battle_log
     }), 200
 
 

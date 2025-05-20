@@ -1,7 +1,7 @@
 import { user, resetUser } from '../store/UserStore';
 import { fromApiBattle } from "../types/BattleType";
 import type { Battle } from '../types/battle';
-
+import { API_HOST } from "../config";
 
 export function isJwtExpired(token: string): boolean {
     if (!token) return true;
@@ -16,7 +16,7 @@ export function isJwtExpired(token: string): boolean {
 }
 
 export async function createBattle(gameSettings: Battle){
-    const response = await fetch('http://127.0.0.1:5000/api/battles', {
+    const response = await fetch(`${API_HOST}/api/battles`, {
         method: 'POST',
         headers: {
             "Authorization": `Bearer ${user.jwt}`,
@@ -36,8 +36,11 @@ export async function createBattle(gameSettings: Battle){
 }
 
 export async function getBattleByUserId() {
+    console.log("Fetching battle data for user:", user.id);
+    const url = `${API_HOST}/api/battles?user_id=${user.id}`;
+    console.log("Fetching battle from url:", url);
     try {
-        const response = await fetch(`http://127.0.0.1:5000/api/battles?user_id=${user.id}`, {
+        const response = await fetch(url, {
             method: "GET",
             headers: {
                 "Authorization": `Bearer ${user.jwt}`,

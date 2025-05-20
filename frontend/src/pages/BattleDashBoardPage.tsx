@@ -1,51 +1,24 @@
 import {
   Typography
 } from "@suid/material";
-import { createSignal, Show, createEffect } from 'solid-js';
+import { createSignal, Show, onMount } from 'solid-js';
 import { useNavigate } from "@solidjs/router";
-import type { Battle } from '../types/battle';
 import BattleCard from '../components/BattleCard';
 import Modal from '../components/Modal';
 import styles from './BattleDashboardPage.module.css';
 import { user } from '../store/UserStore';
-import { useLocation } from "@solidjs/router";
-import { activeBattle, clearBattle, replaceBattle } from "../store/BattleStore";
-import { getBattleByUserId } from "../modules/Api";
+import { activeBattle, clearBattle } from "../store/BattleStore";
+import { loadOngoingBattle } from "../modules/battle-utils";
 
 
 function BattleDashboardPage() {
   const [showLoginModal, setShowLoginModal] = createSignal(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const [showConfirmModal, setShowConfirmModal] = createSignal(false);
 
-  function loadOngoingBattle() {
-    if (!user.id) {
-      console.log("No user ID found. Cannot fetch battles.");
-      clearBattle();
-      return;
-    }
-    getBattleByUserId()
-      .then(fetchedBattle => {
-        if (!fetchedBattle) {
-          console.log("No active battle found for user.");
-          clearBattle();
-          return;
-        }
-        replaceBattle(fetchedBattle);
-      })
-      .catch(error => {
-        console.error("Failed to fetch battles:", error);
-        alert("Failed to fetch battles. See console for details.");
-        clearBattle();
-      });
-  }
-
-  createEffect(() => {
-    location.pathname;
-    loadOngoingBattle();
+  onMount(() => {
+      loadOngoingBattle();
   });
-
 
 
   const handleStartNewBattle = () => {
