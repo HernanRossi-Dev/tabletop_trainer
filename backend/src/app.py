@@ -12,9 +12,9 @@ from .gen_client import GenClient
 
 class App:
 
-    _flask: Flask
-    _db: SQLAlchemy
-    _gen_client: GenClient
+    _flask: Flask = None
+    _db: SQLAlchemy = None
+    _gen_client: GenClient = None
 
     
     def setup_flask(self):
