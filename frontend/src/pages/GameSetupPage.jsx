@@ -72,7 +72,7 @@ function GameSetupPage() {
       armyTurn: 'TBD',
       playerScore: 0,
       opponentScore: 0,
-      battleLog: "",
+      battleLog: {},
     };
     try {
       const gameData = await createBattle(gameSettings);

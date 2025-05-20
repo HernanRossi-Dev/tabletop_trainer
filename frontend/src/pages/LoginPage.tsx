@@ -1,7 +1,8 @@
 import { createSignal, onMount, Show } from 'solid-js';
-import styles from './LoginPage.module.css'; // For styling
+import styles from './LoginPage.module.css';
 import { user, replaceUser, UserProfile } from "../store/UserStore";
 import { useNavigate } from '@solidjs/router';
+import { GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI } from '../config';
 // import { isJwtExpired } from '../modules/Api';
 
 
@@ -36,9 +37,6 @@ function LoginPage() {
   // const [isLoadingFacebook, setIsLoadingFacebook] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
   const navigate = useNavigate();
-
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  const redirectURI = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
   // const facebookAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
 
   // --- SDK Initialization ---
@@ -50,14 +48,14 @@ function LoginPage() {
     try {
       // Load Google SDK (New Google Identity Services)
       await loadScript('https://accounts.google.com/gsi/client', 'google-identity-services');
-      if (!googleClientId) {
+      if (!GOOGLE_CLIENT_ID) {
         console.error("Google Client ID is missing. Set VITE_GOOGLE_CLIENT_ID in your .env file.");
         setError("Google Login configuration is missing.");
         return; // Don't initialize if ID is missing
       }
       // Initialize Google Identity Services
       google.accounts.id.initialize({
-        client_id: googleClientId,
+        client_id: GOOGLE_CLIENT_ID,
         callback: handleGoogleCredentialResponse, // Function to handle the response
         // ux_mode: 'redirect', // Use 'redirect' if you want a full page redirect flow
         // login_uri: 'YOUR_BACKEND_ENDPOINT_FOR_GOOGLE', // For redirect flow backend handling
@@ -97,14 +95,14 @@ function LoginPage() {
   const handleGoogleLoginClick = () => {
     setError(null);
     setIsLoadingGoogle(true);
-    if (!googleClientId) {
+    if (!GOOGLE_CLIENT_ID) {
        setError("Google Login is not configured.");
        setIsLoadingGoogle(false);
        return;
     }
     try {
        const client = google.accounts.oauth2.initCodeClient({
-           client_id: googleClientId,
+           client_id: GOOGLE_CLIENT_ID,
            scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
            ux_mode: 'popup',
            callback: handleGoogleCredentialResponse,
@@ -130,10 +128,10 @@ function LoginPage() {
     try {
       const authBody = {
         code: `${response.code}`,
-        client_id: googleClientId,
-        audience: googleClientId,
+        client_id: GOOGLE_CLIENT_ID,
+        audience: GOOGLE_CLIENT_ID,
         grant_type: 'authorization_code',
-        redirect_uri: redirectURI,
+        redirect_uri: GOOGLE_REDIRECT_URI,
       }
       const postAuthResponse = await fetch('http://127.0.0.1:5000/api/authorization', {
         method: 'POST',

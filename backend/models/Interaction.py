@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from ..src.app import app
+from backend.src.app import app
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 class Interaction(app.db.Model):

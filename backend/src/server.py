@@ -14,7 +14,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
 
 from backend.src.battle_state import BattleState
-from backend.src.tasks.tasks import log_interaction_task
+from backend.tasks.tasks import log_interaction_task
 from .helpers import jwt_required
 from backend.models.User import User
 from backend.models.Interaction import Interaction

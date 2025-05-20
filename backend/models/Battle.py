@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import datetime
-from ..src.app import app
+from backend.src.app import app
 from sqlalchemy.dialects.postgresql import UUID
 
 class Battle(app.db.Model):

@@ -1,6 +1,6 @@
 from .celery_worker import celery
-from src.app import app as source
-from models.Interaction import Interaction
+from backend.src.app import app as source
+from backend.models.Interaction import Interaction
 
 @celery.task
 def log_interaction_task(user_id, user_message, response, interaction_type="text"):
