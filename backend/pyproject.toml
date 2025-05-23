@@ -24,5 +24,32 @@ redis = "^6.1.0"
 
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[project]
+authors = [
+    {name = "HernanRossi", email = "hfdrossi@gmail.com"},
+]
+requires-python = "<4.0,>=3.12"
+dependencies = [
+    "flask<4.0.0,>=3.1.0",
+    "flask-sqlalchemy<4.0.0,>=3.1.1",
+    "psycopg2-binary<3.0.0,>=2.9.10",
+    "python-dotenv<2.0.0,>=1.1.0",
+    "gunicorn<24.0.0,>=23.0.0",
+    "flask-cors<6.0.0,>=5.0.1",
+    "google-auth<3.0.0,>=2.39.0",
+    "requests<3.0.0,>=2.32.3",
+    "flask-session<1.0.0,>=0.8.0",
+    "pyjwt<3.0.0,>=2.10.1",
+    "pytest<9.0.0,>=8.3.5",
+    "google-genai<2.0.0,>=1.15.0",
+    "celery<6.0.0,>=5.5.2",
+    "redis<7.0.0,>=6.1.0",
+]
+name = "tabletop_trainer"
+version = "0.1.0"
+description = ""
+readme = "README.md"
