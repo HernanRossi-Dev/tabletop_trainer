@@ -17,4 +17,4 @@ export JWT_SECRET=your_jwt_secret
 export GOOGLEAI_API_KEY=your_google_secret
 
 # bash run_flask.sh
-poetry run celery -A backend.tasks.celery_worker.celery worker --loglevel=info
+uv run celery -A backend.tasks.celery_worker.celery worker --loglevel=info
