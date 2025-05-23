@@ -17,4 +17,4 @@ export JWT_SECRET=your_jwt_secret
 export GOOGLEAI_API_KEY=your_google_secret
 
 # bash run_flask.sh
-uv run flask --app /Users/hrossi/workspace/tabletop_trainer/backend/src/server.py run
+uv run flask --app backend/src/server.py run
